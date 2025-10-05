@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -41,7 +42,13 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ChatbotScreen(),
+                        ),
+                      );
+                    },
                     icon: const Icon(Icons.smart_toy),
                     label: const Text('Assistente IA'),
                   ),
