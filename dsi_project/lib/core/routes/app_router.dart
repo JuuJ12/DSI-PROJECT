@@ -1,7 +1,7 @@
 import 'package:dsi_project/core/widgets/splash_screen.dart';
 import 'package:dsi_project/features/auth/presentation/screens/login_screen.dart';
 import 'package:dsi_project/features/auth/presentation/screens/register_screen.dart';
-import 'package:dsi_project/features/chatbot/presentation/screens/chatbot_screen.dart';
+import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
 import 'package:dsi_project/features/meal_tracker/presentation/screens/meal_tracker_screen.dart';
 import 'package:dsi_project/features/meal_tracker/presentation/screens/metrics_screen.dart';
