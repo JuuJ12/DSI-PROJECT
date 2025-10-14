@@ -1,5 +1,19 @@
+import 'package:dsi_project/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:dsi_project/core/routes/app_router.dart';
 import 'package:intl/intl.dart';
+
+
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  appRouter = createRouter();
+
+  runApp(const MyApp());
+}
 
 class AgendamentoScreen extends StatefulWidget {
   @override
