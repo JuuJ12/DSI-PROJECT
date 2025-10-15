@@ -3,14 +3,6 @@ import 'package:dsi_project/features/auth/presentation/screens/login_screen.dart
 import 'package:dsi_project/features/auth/presentation/screens/register_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
-// import 'package:dsi_project/features/meal_tracker/presentation/screens/meal_tracker_screen.dart';
-// import 'package:dsi_project/features/meal_tracker/presentation/screens/metrics_screen.dart';
-// import 'package:dsi_project/features/medications/presentation/screens/medications_screen.dart';
-// import 'package:dsi_project/features/medications/presentation/screens/reminder_alarm_screen.dart';
-// import 'package:dsi_project/features/settings/presentation/screens/account_screen.dart';
-// import 'package:dsi_project/features/settings/presentation/screens/change_password_screen.dart';
-// import 'package:dsi_project/features/settings/presentation/screens/settings_screen.dart';
-// import 'package:dsi_project/features/settings/presentation/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
