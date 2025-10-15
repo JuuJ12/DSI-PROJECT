@@ -6,7 +6,7 @@ import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  Future<void>  _logout(BuildContext context) async {
+  Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
       if (context.mounted) {
@@ -57,12 +57,6 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.bar_chart),
-                    label: const Text('Minhas métricas'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {},
                     icon: const Icon(Icons.medication),
                     label: const Text('Medicamentos'),
                   ),
@@ -76,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.smart_toy),
-                    label: const Text('Assistente IA'),
+                    label: const Text('Assistente Nutricionista'),
                   ),
                 ],
               ),
