@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String id;
   final String email;
   final String? displayName;
-  final String? dateOfBirth;
+  final DateTime? dateOfBirth;
   final DateTime createdAt;
   final Map<String, dynamic>? extra; // campos adicionais
 
@@ -19,7 +21,7 @@ class UserModel {
     String? id,
     String? email,
     String? displayName,
-    String? dateOfBirth,
+    DateTime? dateOfBirth,
     DateTime? createdAt,
     Map<String, dynamic>? extra,
   }) {
@@ -34,14 +36,29 @@ class UserModel {
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
+    final createdRaw = map['createdAt'];
+    final DateTime createdAt = switch (createdRaw) {
+      Timestamp ts => ts.toDate(),
+      int ms => DateTime.fromMillisecondsSinceEpoch(ms),
+      String iso => DateTime.tryParse(iso) ?? DateTime.now(),
+      _ => DateTime.now(),
+    };
+
+    // dateOfBirth: aceita Timestamp (novo), int ms (legado) ou String ISO (legado)
+    final dobRaw = map['dateOfBirth'];
+    final DateTime? dob = switch (dobRaw) {
+      Timestamp ts => ts.toDate(),
+      int ms => DateTime.fromMillisecondsSinceEpoch(ms),
+      String iso => DateTime.tryParse(iso),
+      _ => null,
+    };
+    
     return UserModel(
       id: id,
       email: map['email'] as String? ?? '',
       displayName: map['displayName'] as String?,
-      dateOfBirth: map['dateOfBirth'] as String?,
-      createdAt: map['createdAt'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
-          : DateTime.now(),
+      dateOfBirth: dob,
+      createdAt: createdAt,
       extra: map['extra'] != null ? Map<String, dynamic>.from(map['extra']) : null,
     );
   }
@@ -50,8 +67,9 @@ class UserModel {
     return {
       'email': email,
       'displayName': displayName,
-      'dateOfBirth': dateOfBirth,
-      'createdAt': createdAt.millisecondsSinceEpoch,
+      // Salva como Timestamp no Firestore
+      'dateOfBirth': dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
+      'createdAt': Timestamp.fromDate(createdAt),
       'extra': extra,
     };
   }

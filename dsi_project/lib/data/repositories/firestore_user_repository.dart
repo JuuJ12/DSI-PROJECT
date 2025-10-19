@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dsi_project/domain/models/user_model.dart';
+import 'package:dsi_project/domain/user_model.dart';
 
 class FirestoreUserRepository {
   static const String collectionName = 'users';

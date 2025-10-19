@@ -1,6 +1,6 @@
 import 'package:dsi_project/core/widgets/splash_wideget.dart';
-import 'package:dsi_project/features/auth/presentation/screens/login_screen.dart';
-import 'package:dsi_project/features/auth/presentation/screens/register_screen.dart';
+import 'package:dsi_project/features/auth/screens/login_screen.dart';
+import 'package:dsi_project/features/auth/screens/register_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +28,6 @@ GoRouter createRouter() {
   return GoRouter(
     initialLocation: '/splash',
 
-    // Splash screen verifica autenticação e redireciona automaticamente
     routes: [
       GoRoute(
         path: '/splash',

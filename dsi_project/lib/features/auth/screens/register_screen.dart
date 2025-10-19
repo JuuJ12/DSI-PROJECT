@@ -1,3 +1,6 @@
+import 'package:dsi_project/data/repositories/firestore_user_repository.dart';
+import 'package:dsi_project/domain/user_model.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -16,10 +19,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-
+  final TextEditingController _dobController = TextEditingController();
+  
+  DateTime? _selectedDob;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  final FirestoreUserRepository _userRepository = FirestoreUserRepository();
 
   @override
   void dispose() {
@@ -27,7 +34,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _nameController.dispose();
+    _dobController.dispose();
     super.dispose();
+  }
+
+  String _formatDate(DateTime d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(d.day)}/${two(d.month)}/${d.year}';
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final initial = DateTime(now.year - 18, now.month, now.day); // sugestão: 18 anos
+    final first = DateTime(1900, 1, 1);
+    final last = now;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDob ?? initial,
+      firstDate: first,
+      lastDate: last,
+      helpText: 'Selecione sua data de nascimento',
+      cancelText: 'Cancelar',
+      confirmText: 'OK',
+      locale: const Locale('pt', 'BR'),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDob = DateTime(picked.year, picked.month, picked.day);
+        _dobController.text = _formatDate(_selectedDob!);
+      });
+    }
+  }
+
+  // NOVO: validação da data de nascimento (obrigatória)
+  String? _validateDob(String? _) {
+    if (_selectedDob == null) {
+      return 'Por favor, selecione sua data de nascimento';
+    }
+    // Exemplo opcional: impedir datas futuras
+    if (_selectedDob!.isAfter(DateTime.now())) {
+      return 'Data de nascimento não pode ser no futuro';
+    }
+    return null;
   }
 
   Future<void> _createUserWithEmailAndPassword() async {
@@ -50,6 +100,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _nameController.text.trim(),
         );
         await userCredential.user!.reload();
+
+        final user = FirebaseAuth.instance.currentUser!;
+        final userModel = UserModel(
+          id: user.uid,
+          email: user.email ?? _emailController.text.trim(),
+          displayName: _nameController.text.trim(),
+          dateOfBirth: _selectedDob,
+        );
+
+        await _userRepository.createUser(userModel);
 
         if (mounted) {
           _showSuccessSnackBar('Conta criada com sucesso!');
@@ -187,6 +247,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 32),
                 _buildNameField(),
                 const SizedBox(height: 16),
+                _buildDobField(),
+                const SizedBox(height: 16),
                 _buildEmailField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
@@ -242,6 +304,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         labelText: 'Nome completo',
         hintText: 'Digite seu nome completo',
         prefixIcon: const Icon(Icons.person_outlined),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDobField() {
+    return TextFormField(
+      controller: _dobController,
+      readOnly: true,
+      validator: _validateDob,
+      onTap: _pickDate,
+      decoration: InputDecoration(
+        labelText: 'Data de nascimento',
+        hintText: 'dd/mm/aaaa',
+        prefixIcon: const Icon(Icons.cake_outlined),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.calendar_today_outlined),
+          onPressed: _pickDate,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
