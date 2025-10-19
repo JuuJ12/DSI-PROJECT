@@ -17,7 +17,6 @@ class FirestoreUserRepository {
       );
 
   Future<void> createUser(UserModel user) {
-    // usa id (por exemplo uid) como documentId
     return _col.doc(user.id).set(user);
   }
 

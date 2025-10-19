@@ -1,6 +1,6 @@
 import 'package:dsi_project/data/repositories/firestore_user_repository.dart';
+import 'package:dsi_project/data/repositories/auth_repository.dart';
 import 'package:dsi_project/domain/user_model.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -20,12 +20,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
-  
+
   DateTime? _selectedDob;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  final AuthRepository _authRepository = AuthRepository();
   final FirestoreUserRepository _userRepository = FirestoreUserRepository();
 
   @override
@@ -45,7 +46,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final initial = DateTime(now.year - 18, now.month, now.day); // sugestão: 18 anos
+    final initial = DateTime(
+      now.year - 18,
+      now.month,
+      now.day,
+    ); // sugestão: 18 anos
     final first = DateTime(1900, 1, 1);
     final last = now;
 
@@ -88,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final UserCredential userCredential = await FirebaseAuth.instance
+      final UserCredential userCredential = await _authRepository
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
@@ -96,20 +101,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (userCredential.user != null) {
         // Atualizar o nome do usuário
-        await userCredential.user!.updateDisplayName(
-          _nameController.text.trim(),
-        );
-        await userCredential.user!.reload();
+        await _authRepository.updateDisplayName(_nameController.text.trim());
 
-        final user = FirebaseAuth.instance.currentUser!;
-        final userModel = UserModel(
-          id: user.uid,
-          email: user.email ?? _emailController.text.trim(),
-          displayName: _nameController.text.trim(),
-          dateOfBirth: _selectedDob,
-        );
-
-        await _userRepository.createUser(userModel);
+        final user = _authRepository.currentUser!;
+        await _createUser(user);
 
         if (mounted) {
           _showSuccessSnackBar('Conta criada com sucesso!');
@@ -128,6 +123,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         });
       }
     }
+  }
+
+  Future<void> _createUser(User user) async {
+    final userModel = UserModel(
+      id: user.uid,
+      email: user.email ?? _emailController.text.trim(),
+      displayName: _nameController.text.trim(),
+      dateOfBirth: _selectedDob,
+    );
+
+    await _userRepository.createUser(userModel);
   }
 
   String _getFirebaseAuthErrorMessage(String errorCode) {
@@ -177,6 +183,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     if (value.trim().length < 2) {
       return 'Nome deve ter pelo menos 2 caracteres';
+    }
+    if (value.trim().length > 50) {
+      return 'Nome deve ter no máximo 50 caracteres';
     }
     return null;
   }
@@ -299,11 +308,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _nameController,
       keyboardType: TextInputType.name,
       textCapitalization: TextCapitalization.words,
+      maxLength: 50,
       validator: _validateName,
       decoration: InputDecoration(
         labelText: 'Nome completo',
         hintText: 'Digite seu nome completo',
         prefixIcon: const Icon(Icons.person_outlined),
+        counterText: '',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -345,80 +356,121 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      validator: _validateEmail,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'Digite seu email',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Email',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          validator: _validateEmail,
+          decoration: InputDecoration(
+            hintText: 'Digite seu email',
+            prefixIcon: const Icon(Icons.email_outlined),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      validator: _validatePassword,
-      decoration: InputDecoration(
-        labelText: 'Senha',
-        hintText: 'Digite sua senha',
-        prefixIcon: const Icon(Icons.lock_outlined),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Senha',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
-          onPressed: _togglePasswordVisibility,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          validator: _validatePassword,
+          decoration: InputDecoration(
+            hintText: 'Digite sua senha',
+            prefixIcon: const Icon(Icons.lock_outlined),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: _togglePasswordVisibility,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-      ),
+      ],
     );
   }
 
   Widget _buildConfirmPasswordField() {
-    return TextFormField(
-      controller: _confirmPasswordController,
-      obscureText: _obscureConfirmPassword,
-      validator: _validateConfirmPassword,
-      decoration: InputDecoration(
-        labelText: 'Confirmar senha',
-        hintText: 'Digite sua senha novamente',
-        prefixIcon: const Icon(Icons.lock_outlined),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Confirmar senha',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
-          onPressed: _toggleConfirmPasswordVisibility,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _confirmPasswordController,
+          obscureText: _obscureConfirmPassword,
+          validator: _validateConfirmPassword,
+          decoration: InputDecoration(
+            hintText: 'Digite sua senha novamente',
+            prefixIcon: const Icon(Icons.lock_outlined),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+              ),
+              onPressed: _toggleConfirmPasswordVisibility,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-      ),
+      ],
     );
   }
 

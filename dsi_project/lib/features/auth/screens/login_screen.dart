@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dsi_project/data/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthRepository _authRepository = AuthRepository();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -32,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final UserCredential userCredential = await FirebaseAuth.instance
+      final UserCredential userCredential = await _authRepository
           .signInWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text,
@@ -128,9 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 96),
                 _buildHeader(),
-                const SizedBox(height: 48),
+                const SizedBox(height: 87),
                 _buildEmailField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
@@ -151,76 +153,107 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Icon(
-          Icons.lock_outline,
-          size: 80,
-          color: Theme.of(context).primaryColor,
+        Image.asset(
+          'assets/images/app_logo.png',
+          width: 128,
+          height: 128,
+          fit: BoxFit.contain,
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Bem-vindo de volta!',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Faça login para continuar',
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-        ),
+        // const Text(
+        //   'Bem-vindo de volta!',
+        //   style: TextStyle(
+        //     fontSize: 28,
+        //     fontWeight: FontWeight.bold,
+        //     color: Colors.black87,
+        //   ),
+        // ),
+        // const SizedBox(height: 8),
+        // Text(
+        //   'Faça login para continuar',
+        //   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+        // ),
       ],
     );
   }
 
   Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      validator: _validateEmail,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'Digite seu email',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Email:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          validator: _validateEmail,
+          decoration: InputDecoration(
+            hintText: 'Insira seu e-mail',
+            hintStyle: TextStyle(color: Colors.grey[600]),
+            fillColor: Colors.grey[200],
+            filled: true,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[600]!),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      validator: _validatePassword,
-      decoration: InputDecoration(
-        labelText: 'Senha',
-        hintText: 'Digite sua senha',
-        prefixIcon: const Icon(Icons.lock_outlined),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Senha:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
-          onPressed: _togglePasswordVisibility,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          validator: _validatePassword,
+          decoration: InputDecoration(
+            hintText: 'Insira sua senha',
+            hintStyle: TextStyle(color: Colors.grey[600]),
+            fillColor: Colors.grey[200],
+            filled: true,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              ),
+              onPressed: _togglePasswordVisibility,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[600]!),
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-      ),
+      ],
     );
   }
 
@@ -228,9 +261,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return ElevatedButton(
       onPressed: _isLoading ? null : _signInWithEmailAndPassword,
       style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1A1A1A),
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
+        disabledBackgroundColor: Colors.grey[400],
       ),
       child: _isLoading
           ? const SizedBox(
@@ -243,7 +279,11 @@ class _LoginScreenState extends State<LoginScreen> {
             )
           : const Text(
               'Entrar',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
     );
   }
@@ -280,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             'Cadastre-se',
             style: TextStyle(
-              color: Theme.of(context).primaryColor,
+              color: Colors.black87,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
