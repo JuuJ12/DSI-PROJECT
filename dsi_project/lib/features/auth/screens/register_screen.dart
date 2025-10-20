@@ -50,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       now.year - 18,
       now.month,
       now.day,
-    ); // sugestão: 18 anos
+    );
     final first = DateTime(1900, 1, 1);
     final last = now;
 
