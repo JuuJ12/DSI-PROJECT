@@ -241,35 +241,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                _buildHeader(),
-                const SizedBox(height: 32),
-                _buildNameField(),
-                const SizedBox(height: 16),
-                _buildDobField(),
-                const SizedBox(height: 16),
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                const SizedBox(height: 16),
-                _buildConfirmPasswordField(),
-                const SizedBox(height: 32),
-                _buildRegisterButton(),
-                const SizedBox(height: 16),
-                _buildDivider(),
-                const SizedBox(height: 16),
-                _buildLoginSection(),
-              ],
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width > 600 ? 48.0 : 24.0,
+              vertical: 16.0,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 24),
+                    _buildHeader(),
+                    const SizedBox(height: 32),
+                    _buildNameField(),
+                    const SizedBox(height: 16),
+                    _buildDobField(),
+                    const SizedBox(height: 16),
+                    _buildEmailField(),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(),
+                    const SizedBox(height: 16),
+                    _buildConfirmPasswordField(),
+                    const SizedBox(height: 24),
+                    _buildRegisterButton(),
+                    const SizedBox(height: 20),
+                    _buildDivider(),
+                    const SizedBox(height: 20),
+                    _buildLoginSection(),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -280,10 +291,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Icon(
-          Icons.person_add_outlined,
-          size: 80,
-          color: Theme.of(context).primaryColor,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.person_add_outlined,
+            size: 40,
+            color: Colors.grey[800],
+          ),
         ),
         const SizedBox(height: 16),
         const Text(
@@ -291,67 +309,159 @@ class _RegisterScreenState extends State<RegisterScreen> {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          'Preencha os dados para se cadastrar',
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          'Preencha seus dados para começar',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildNameField() {
-    return TextFormField(
-      controller: _nameController,
-      keyboardType: TextInputType.name,
-      textCapitalization: TextCapitalization.words,
-      maxLength: 50,
-      validator: _validateName,
-      decoration: InputDecoration(
-        labelText: 'Nome completo',
-        hintText: 'Digite seu nome completo',
-        prefixIcon: const Icon(Icons.person_outlined),
-        counterText: '',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Nome completo',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[900],
+            letterSpacing: 0.2,
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _nameController,
+          keyboardType: TextInputType.name,
+          textCapitalization: TextCapitalization.words,
+          maxLength: 50,
+          validator: _validateName,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            hintText: 'Digite seu nome completo',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            prefixIcon: Icon(
+              Icons.person_outlined,
+              color: Colors.grey[400],
+              size: 22,
+            ),
+            counterText: '',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[400]!),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildDobField() {
-    return TextFormField(
-      controller: _dobController,
-      readOnly: true,
-      validator: _validateDob,
-      onTap: _pickDate,
-      decoration: InputDecoration(
-        labelText: 'Data de nascimento',
-        hintText: 'dd/mm/aaaa',
-        prefixIcon: const Icon(Icons.cake_outlined),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.calendar_today_outlined),
-          onPressed: _pickDate,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Data de nascimento',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[900],
+            letterSpacing: 0.2,
+          ),
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _dobController,
+          readOnly: true,
+          validator: _validateDob,
+          onTap: _pickDate,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            hintText: 'dd/mm/aaaa',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            prefixIcon: Icon(
+              Icons.cake_outlined,
+              color: Colors.grey[400],
+              size: 22,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                Icons.calendar_today_outlined,
+                color: Colors.grey[600],
+                size: 20,
+              ),
+              onPressed: _pickDate,
+              splashRadius: 20,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[400]!),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-      ),
+      ],
     );
   }
 
@@ -359,12 +469,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Email',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Colors.grey[900],
+            letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 8),
@@ -372,17 +483,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           validator: _validateEmail,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
-            hintText: 'Digite seu email',
-            prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintText: 'seu@email.com',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            prefixIcon: Icon(
+              Icons.email_outlined,
+              color: Colors.grey[400],
+              size: 22,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+              borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[400]!),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
           ),
         ),
@@ -394,12 +532,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Senha',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Colors.grey[900],
+            letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 8),
@@ -407,23 +546,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
           controller: _passwordController,
           obscureText: _obscurePassword,
           validator: _validatePassword,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
-            hintText: 'Digite sua senha',
-            prefixIcon: const Icon(Icons.lock_outlined),
+            hintText: '••••••••',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            prefixIcon: Icon(
+              Icons.lock_outlined,
+              color: Colors.grey[400],
+              size: 22,
+            ),
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                _obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: Colors.grey[600],
+                size: 22,
               ),
               onPressed: _togglePasswordVisibility,
+              splashRadius: 20,
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+              borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[400]!),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
           ),
         ),
@@ -435,12 +606,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Confirmar senha',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Colors.grey[900],
+            letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 8),
@@ -448,25 +620,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
           controller: _confirmPasswordController,
           obscureText: _obscureConfirmPassword,
           validator: _validateConfirmPassword,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
-            hintText: 'Digite sua senha novamente',
-            prefixIcon: const Icon(Icons.lock_outlined),
+            hintText: '••••••••',
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            prefixIcon: Icon(
+              Icons.lock_outlined,
+              color: Colors.grey[400],
+              size: 22,
+            ),
             suffixIcon: IconButton(
               icon: Icon(
                 _obscureConfirmPassword
-                    ? Icons.visibility
-                    : Icons.visibility_off,
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: Colors.grey[600],
+                size: 22,
               ),
               onPressed: _toggleConfirmPasswordVisibility,
+              splashRadius: 20,
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+              borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[400]!),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red[600]!, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
           ),
         ),
@@ -475,68 +677,94 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildRegisterButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _createUserWithEmailAndPassword,
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2,
-      ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _createUserWithEmailAndPassword,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1A1A1A),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          disabledBackgroundColor: Colors.grey[300],
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text(
+                'Criar Conta',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
               ),
-            )
-          : const Text(
-              'Criar Conta',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+      ),
     );
   }
 
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: Colors.grey[400])),
+        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'OU',
+            'ou',
             style: TextStyle(
-              color: Colors.grey[600],
+              fontSize: 13,
+              color: Colors.grey[500],
               fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
             ),
           ),
         ),
-        Expanded(child: Divider(color: Colors.grey[400])),
+        Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
       ],
     );
   }
 
   Widget _buildLoginSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Já tem uma conta? ',
-          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+    return Center(
+      child: TextButton(
+        onPressed: _navigateToLogin,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        GestureDetector(
-          onTap: _navigateToLogin,
-          child: Text(
-            'Faça login',
+        child: RichText(
+          text: TextSpan(
             style: TextStyle(
-              color: Theme.of(context).primaryColor,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w400,
             ),
+            children: const [
+              TextSpan(text: 'Já tem uma conta? '),
+              TextSpan(
+                text: 'Faça login',
+                style: TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationThickness: 2,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
