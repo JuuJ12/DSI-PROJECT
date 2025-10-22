@@ -2,8 +2,8 @@ import 'package:dsi_project/core/widgets/splash_wideget.dart';
 import 'package:dsi_project/features/auth/screens/login_screen.dart';
 import 'package:dsi_project/features/auth/screens/register_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
+import 'package:dsi_project/features/crud_atv_fisica/list_atividades_screen.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 late GoRouter appRouter;
@@ -22,6 +22,7 @@ enum AppRoutes {
   editAccount,
   alarm,
   metrics,
+  atividades,
 }
 
 GoRouter createRouter() {
@@ -53,6 +54,11 @@ GoRouter createRouter() {
         path: '/chatbot',
         name: AppRoutes.chatbot.name,
         builder: (context, state) => ChatbotScreen(),
+      ),
+      GoRoute(
+        path: '/atividades',
+        name: AppRoutes.atividades.name,
+        builder: (context, state) => const ListAtividadesScreen(),
       ),
       // GoRoute(
       //   path: '/mealTracker',
