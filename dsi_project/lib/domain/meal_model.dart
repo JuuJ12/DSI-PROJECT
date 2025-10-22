@@ -6,8 +6,9 @@ class Meal {
   final String userId;
   final String name; // "Café da manhã", "Almoço", "Jantar"
   final String imageUrl;
+  final String time; // Horário da refeição (ex: "08:00")
   final DateTime createdAt;
-  final List<MealFood> foods; 
+  final List<MealFood> foods;
 
   Meal({
     required this.id,
@@ -15,6 +16,7 @@ class Meal {
     required this.name,
     required this.imageUrl,
     required this.createdAt,
+    this.time = '',
     this.foods = const [],
   });
 
@@ -39,6 +41,7 @@ class Meal {
       'userId': userId,
       'name': name,
       'imageUrl': imageUrl,
+      'time': time,
       'createdAt': Timestamp.fromDate(createdAt),
       'foods': foods.map((f) => f.toMap()).toList(),
     };
@@ -50,6 +53,7 @@ class Meal {
       userId: map['userId'] ?? '',
       name: map['name'] ?? '',
       imageUrl: map['imageUrl'] ?? '',
+      time: map['time'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       foods:
           (map['foods'] as List<dynamic>?)
@@ -64,6 +68,7 @@ class Meal {
     String? userId,
     String? name,
     String? imageUrl,
+    String? time,
     DateTime? createdAt,
     List<MealFood>? foods,
   }) {
@@ -72,6 +77,7 @@ class Meal {
       userId: userId ?? this.userId,
       name: name ?? this.name,
       imageUrl: imageUrl ?? this.imageUrl,
+      time: time ?? this.time,
       createdAt: createdAt ?? this.createdAt,
       foods: foods ?? this.foods,
     );

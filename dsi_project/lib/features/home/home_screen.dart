@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dsi_project/features/meals/build_your_plate_screen.dart';
+import 'package:dsi_project/features/meals/my_meals_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/settings/settings_screen.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
@@ -28,18 +28,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = _authRepository.currentUser;
     if (user != null) {
       _mealRepository.getMealsByUser(user.uid).first.then((meals) {
-        if (meals.isEmpty && mounted) {
-          _mealRepository.createDefaultMeals(user.uid);
-        }
+        // Não cria mais refeições padrão automaticamente
+        // O usuário criará suas próprias refeições
       });
     }
   }
 
   // Navegação otimizada - navega imediatamente sem esperar
-  void _navigateToBuildPlate(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const BuildYourPlateScreen()),
-    );
+  void _navigateToMyMeals(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const MyMealsScreen()));
   }
 
   void _showComingSoon(BuildContext context) {
@@ -250,13 +249,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisSpacing: 16,
                       childAspectRatio: 1.1,
                       children: [
-                        // Monte seu prato
+                        // Minhas Refeições
                         _buildFeatureCard(
                           context,
-                          title: 'Monte seu prato',
+                          title: 'Minhas Refeições',
                           icon: 'assets/images/monte_seu_prato_icon.png',
                           useAssetImage: true,
-                          onTap: () => _navigateToBuildPlate(context),
+                          onTap: () => _navigateToMyMeals(context),
                         ),
                         // Minhas métricas
                         _buildFeatureCard(
