@@ -7,12 +7,12 @@ class FirestoreUserRepository {
   final FirebaseFirestore _firestore;
 
   FirestoreUserRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference<UserModel> get _col => _firestore
       .collection(collectionName)
       .withConverter<UserModel>(
-        fromFirestore: (snap, _) => UserModel.fromMap(snap.data()! as Map<String, dynamic>, snap.id),
+        fromFirestore: (snap, _) => UserModel.fromMap(snap.data()!, snap.id),
         toFirestore: (user, _) => user.toMap(),
       );
 
@@ -34,6 +34,9 @@ class FirestoreUserRepository {
   }
 
   Stream<UserModel?> watchUser(String id) {
-    return _col.doc(id).snapshots().map((snap) => snap.exists ? snap.data() : null);
+    return _col
+        .doc(id)
+        .snapshots()
+        .map((snap) => snap.exists ? snap.data() : null);
   }
 }

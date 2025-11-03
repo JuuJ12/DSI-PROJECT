@@ -4,6 +4,7 @@ import 'package:dsi_project/features/auth/screens/register_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/crud_atv_fisica/list_atividades_screen.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
+import 'package:dsi_project/features/mapa_diabetes/widgets/mapa_google_filters.dart';
 import 'package:go_router/go_router.dart';
 
 late GoRouter appRouter;
@@ -23,6 +24,7 @@ enum AppRoutes {
   alarm,
   metrics,
   atividades,
+  mapaDiabetesGoogle,
 }
 
 GoRouter createRouter() {
@@ -59,6 +61,11 @@ GoRouter createRouter() {
         path: '/atividades',
         name: AppRoutes.atividades.name,
         builder: (context, state) => const ListAtividadesScreen(),
+      ),
+      GoRoute(
+        path: '/mapa-diabetes-google',
+        name: AppRoutes.mapaDiabetesGoogle.name,
+        builder: (context, state) => const GooglePlacesFilterMap(),
       ),
       // GoRoute(
       //   path: '/mealTracker',

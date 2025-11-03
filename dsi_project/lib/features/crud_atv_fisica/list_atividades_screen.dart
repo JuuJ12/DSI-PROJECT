@@ -326,16 +326,18 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
             child: StreamBuilder<List<AtividadeFisica>>(
               stream: _repo.streamAtividades(),
               builder: (context, snapshot) {
-                if (snapshot.hasError)
+                if (snapshot.hasError) {
                   return Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Center(child: Text('Erro: ${snapshot.error}')),
                   );
-                if (!snapshot.hasData)
+                }
+                if (!snapshot.hasData) {
                   return const Padding(
                     padding: EdgeInsets.all(20.0),
                     child: Center(child: CircularProgressIndicator()),
                   );
+                }
                 final items = snapshot.data!;
 
                 // build list of available tipos from loaded items
@@ -480,14 +482,15 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                                   label: Text(tipo),
                                   selected: sel,
                                   onSelected: (s) => setState(() {
-                                    if (s)
+                                    if (s) {
                                       _selectedTipoFilters.add(tipo);
-                                    else
+                                    } else {
                                       _selectedTipoFilters.remove(tipo);
+                                    }
                                   }),
                                 ),
                               );
-                            }).toList(),
+                            }),
                           ],
                         ),
                       ),
@@ -502,8 +505,9 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                   padding: const EdgeInsets.only(bottom: 120),
                   itemCount: total,
                   itemBuilder: (context, index) {
-                    if (index < headerWidgets.length)
+                    if (index < headerWidgets.length) {
                       return headerWidgets[index];
+                    }
                     final a = filtered[index - headerWidgets.length];
                     final intensityColor = colorForIntensidade(a.intensidade);
                     return Column(
@@ -606,8 +610,9 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                                       ],
                                     ),
                                   );
-                                  if (confirm == true && a.id != null)
+                                  if (confirm == true && a.id != null) {
                                     await _repo.delete(a.id!);
+                                  }
                                 },
                               ),
                             ],

@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Permissões de localização para geolocator -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para centralizar o mapa e exibir serviços próximos relacionados ao cuidado com diabetes.</string>
+
+	<!-- Chave da API do Google Maps (iOS) NÃO está colocada aqui para evitar versionamento.
+	Se desejar executar localmente, adicione a chave GMSApiKey em seu Info.plist local ou
+	coloque a chave em um arquivo local não versionado e adicione a entrada GMSApiKey. -->
 </dict>
 </plist>

@@ -23,8 +23,9 @@ class AtividadeRepository {
     Query q = collection;
     if (from != null) q = q.where('dataHora', isGreaterThanOrEqualTo: from);
     if (to != null) q = q.where('dataHora', isLessThanOrEqualTo: to);
-    if (intensidade != null && intensidade.isNotEmpty)
+    if (intensidade != null && intensidade.isNotEmpty) {
       q = q.where('intensidade', isEqualTo: intensidade);
+    }
     q = q.orderBy('dataHora', descending: true);
     return q.snapshots().map(
       (snap) => snap.docs.map((d) => AtividadeFisica.fromDoc(d)).toList(),

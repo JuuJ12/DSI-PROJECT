@@ -101,8 +101,9 @@ class VisualizarAtividadeScreen extends StatelessWidget {
                     );
                     if (confirm == true) {
                       final repo = AtividadeRepository();
-                      if (atividade.id != null)
+                      if (atividade.id != null) {
                         await repo.delete(atividade.id!);
+                      }
                       Navigator.pop(context); // close details
                     }
                   },
