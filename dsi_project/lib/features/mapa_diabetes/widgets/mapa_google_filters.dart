@@ -174,7 +174,9 @@ class _GooglePlacesFilterMapState extends State<GooglePlacesFilterMap> {
 
   Future<void> _applyFilter(String tipo) async {
     if (!_isMobilePlatform) {
-      _showMessage('Filtros do Google Maps só funcionam em Android/iOS. Execute o app em um dispositivo ou emulador Android/iOS.');
+      _showMessage(
+        'Filtros do Google Maps só funcionam em Android/iOS. Execute o app em um dispositivo ou emulador Android/iOS.',
+      );
       return;
     }
 

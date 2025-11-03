@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 firebase_options.dart
 .gitignore
+# Local config files (do not commit API keys)
+local.properties
+android/local.properties
