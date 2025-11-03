@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "714041658323",
+    "project_id": "projeto-dsi-4f5f6",
+    "storage_bucket": "projeto-dsi-4f5f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714041658323:android:a27bf7135e07f027903d26",
+        "android_client_info": {
+          "package_name": "com.example.dsi_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcVc-Z2QnenSZqFOtJJwHrS4aw6pd--T4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
