@@ -1,0 +1,484 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+
+class SchedulingScreen extends StatefulWidget {
+  @override
+  _SchedulingScreenState createState() => _SchedulingScreenState();
+}
+
+class _SchedulingScreenState extends State<SchedulingScreen> {
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  
+  List<ScheduleItem> _scheduledItems = [];
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+    _loadScheduledItems();
+  }
+
+  Future<void> _initializeNotifications() async {
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('app_icon');
+    
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: androidSettings);
+    
+    await notificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _loadScheduledItems() async {
+    // Carregar itens agendados do banco de dados
+    final items = await ScheduleService.getScheduledItems();
+    setState(() {
+      _scheduledItems = items;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Agendamentos'),
+        backgroundColor: Colors.blue.shade700,
+      ),
+      body: Column(
+        children: [
+          _buildQuickScheduleButtons(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _scheduledItems.length,
+              itemBuilder: (context, index) {
+                return _buildScheduleItem(_scheduledItems[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddScheduleDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  Widget _buildQuickScheduleButtons() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Agendamento Rápido',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildQuickButton('Refeição', Icons.restaurant, _quickScheduleMeal),
+                _buildQuickButton('Medicamento', Icons.medical_services, _quickScheduleMedication),
+                _buildQuickButton('Glicemia', Icons.monitor_heart, _quickScheduleGlucoseCheck),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickButton(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            child: Icon(icon, color: Colors.white),
+            backgroundColor: Colors.blue.shade600,
+          ),
+          SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleItem(ScheduleItem item) {
+    return Dismissible(
+      key: Key(item.id),
+      onDismissed: (direction) => _deleteScheduleItem(item),
+      background: Container(color: Colors.red),
+      child: Card(
+        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: ListTile(
+          leading: _getScheduleIcon(item.type),
+          title: Text(item.title),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${_formatTime(item.scheduledTime)}'),
+              if (item.description != null) Text(item.description!),
+            ],
+          ),
+          trailing: Switch(
+            value: item.isActive,
+            onChanged: (value) => _toggleScheduleActive(item, value),
+          ),
+          onTap: () => _editScheduleItem(item),
+        ),
+      ),
+    );
+  }
+
+  Icon _getScheduleIcon(ScheduleType type) {
+    switch (type) {
+      case ScheduleType.medication:
+        return Icon(Icons.medical_services, color: Colors.red);
+      case ScheduleType.meal:
+        return Icon(Icons.restaurant, color: Colors.green);
+      case ScheduleType.glucoseCheck:
+        return Icon(Icons.monitor_heart, color: Colors.orange);
+      case ScheduleType.exercise:
+        return Icon(Icons.fitness_center, color: Colors.blue);
+      default:
+        return Icon(Icons.schedule, color: Colors.grey);
+    }
+  }
+
+  void _showAddScheduleDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => ScheduleDialog(
+        onSave: (newItem) async {
+          await _addScheduleItem(newItem);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  Future<void> _addScheduleItem(ScheduleItem item) async {
+    await ScheduleService.addScheduledItem(item);
+    await _scheduleNotification(item);
+    _loadScheduledItems();
+  }
+
+  Future<void> _scheduleNotification(ScheduleItem item) async {
+    if (!item.isActive) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'schedule_channel',
+      'Lembretes de Agendamento',
+      channelDescription: 'Notificações para medicamentos, refeições e checkups',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+
+    final notificationDetails = NotificationDetails(android: androidDetails);
+
+    await notificationsPlugin.zonedSchedule(
+      item.hashCode,
+      item.title,
+      item.description ?? 'Lembrete do DiAssistant',
+      _scheduleTime(item.scheduledTime),
+      notificationDetails,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      androidAllowWhileIdle: true,
+    );
+  }
+
+  tz.TZDateTime _scheduleTime(TimeOfDay time) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(Duration(days: 1));
+    }
+    
+    return scheduledDate;
+  }
+
+  void _quickScheduleMeal() {
+    final now = TimeOfDay.now();
+    final mealTime = TimeOfDay(hour: now.hour + 1, minute: now.minute);
+    
+    final mealItem = ScheduleItem(
+      title: 'Refeição Principal',
+      type: ScheduleType.meal,
+      scheduledTime: mealTime,
+      description: 'Não se esqueça de contar os carboidratos!',
+    );
+    
+    _addScheduleItem(mealItem);
+  }
+
+  void _quickScheduleMedication() {
+    final medicationItem = ScheduleItem(
+      title: 'Medicação - Insulina',
+      type: ScheduleType.medication,
+      scheduledTime: TimeOfDay.now(),
+      description: 'Aplicar insulina conforme prescrição',
+    );
+    
+    _addScheduleItem(medicationItem);
+  }
+
+  void _quickScheduleGlucoseCheck() {
+    final glucoseItem = ScheduleItem(
+      title: 'Verificação de Glicemia',
+      type: ScheduleType.glucoseCheck,
+      scheduledTime: TimeOfDay.now(),
+      description: 'Medir glicemia antes da refeição',
+    );
+    
+    _addScheduleItem(glucoseItem);
+  }
+
+  Future<void> _deleteScheduleItem(ScheduleItem item) async {
+    await ScheduleService.deleteScheduledItem(item.id);
+    await notificationsPlugin.cancel(item.hashCode);
+    _loadScheduledItems();
+  }
+
+  Future<void> _toggleScheduleActive(ScheduleItem item, bool active) async {
+    final updatedItem = item.copyWith(isActive: active);
+    await ScheduleService.updateScheduledItem(updatedItem);
+    
+    if (active) {
+      await _scheduleNotification(updatedItem);
+    } else {
+      await notificationsPlugin.cancel(item.hashCode);
+    }
+    
+    _loadScheduledItems();
+  }
+
+  void _editScheduleItem(ScheduleItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => ScheduleDialog(
+        item: item,
+        onSave: (updatedItem) async {
+          await ScheduleService.updateScheduledItem(updatedItem);
+          await notificationsPlugin.cancel(item.hashCode);
+          if (updatedItem.isActive) {
+            await _scheduleNotification(updatedItem);
+          }
+          _loadScheduledItems();
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final now = DateTime.now();
+    final datetime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return '${time.format(context)}';
+  }
+}
+
+// DIÁLOGO PARA ADICIONAR/EDITAR AGENDAMENTOS
+class ScheduleDialog extends StatefulWidget {
+  final ScheduleItem? item;
+  final Function(ScheduleItem) onSave;
+
+  const ScheduleDialog({this.item, required this.onSave});
+
+  @override
+  _ScheduleDialogState createState() => _ScheduleDialogState();
+}
+
+class _ScheduleDialogState extends State<ScheduleDialog> {
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  ScheduleType _selectedType = ScheduleType.medication;
+  bool _isActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item != null) {
+      _titleController.text = widget.item!.title;
+      _descriptionController.text = widget.item!.description ?? '';
+      _selectedTime = widget.item!.scheduledTime;
+      _selectedType = widget.item!.type;
+      _isActive = widget.item!.isActive;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.item == null ? 'Novo Agendamento' : 'Editar Agendamento'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _titleController,
+              decoration: InputDecoration(labelText: 'Título'),
+            ),
+            TextFormField(
+              controller: _descriptionController,
+              decoration: InputDecoration(labelText: 'Descrição (opcional)'),
+            ),
+            SizedBox(height: 16),
+            ListTile(
+              title: Text('Horário'),
+              subtitle: Text('${_selectedTime.format(context)}'),
+              trailing: Icon(Icons.access_time),
+              onTap: _selectTime,
+            ),
+            DropdownButtonFormField<ScheduleType>(
+              value: _selectedType,
+              items: ScheduleType.values.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(_getTypeLabel(type)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value!;
+                });
+              },
+              decoration: InputDecoration(labelText: 'Tipo'),
+            ),
+            SwitchListTile(
+              title: Text('Ativo'),
+              value: _isActive,
+              onChanged: (value) {
+                setState(() {
+                  _isActive = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _save,
+          child: Text('Salvar'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
+  void _save() {
+    final item = ScheduleItem(
+      id: widget.item?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: _titleController.text,
+      description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+      type: _selectedType,
+      scheduledTime: _selectedTime,
+      isActive: _isActive,
+    );
+    
+    widget.onSave(item);
+  }
+
+  String _getTypeLabel(ScheduleType type) {
+    switch (type) {
+      case ScheduleType.medication: return 'Medicação';
+      case ScheduleType.meal: return 'Refeição';
+      case ScheduleType.glucoseCheck: return 'Verificação Glicemia';
+      case ScheduleType.exercise: return 'Exercício';
+      default: return 'Outro';
+    }
+  }
+}
+
+// MODELOS E SERVIÇOS
+enum ScheduleType { medication, meal, glucoseCheck, exercise, other }
+
+class ScheduleItem {
+  final String id;
+  final String title;
+  final String? description;
+  final ScheduleType type;
+  final TimeOfDay scheduledTime;
+  final bool isActive;
+
+  ScheduleItem({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.type,
+    required this.scheduledTime,
+    this.isActive = true,
+  });
+
+  ScheduleItem copyWith({
+    String? id,
+    String? title,
+    String? description,
+    ScheduleType? type,
+    TimeOfDay? scheduledTime,
+    bool? isActive,
+  }) {
+    return ScheduleItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      scheduledTime: scheduledTime ?? this.scheduledTime,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+}
+
+class ScheduleService {
+  static Future<List<ScheduleItem>> getScheduledItems() async {
+    // Implementar busca no banco de dados
+    await Future.delayed(Duration(milliseconds: 500)); // Simular delay
+    return [];
+  }
+
+  static Future<void> addScheduledItem(ScheduleItem item) async {
+    // Implementar inserção no banco de dados
+  }
+
+  static Future<void> updateScheduledItem(ScheduleItem item) async {
+    // Implementar atualização no banco de dados
+  }
+
+  static Future<void> deleteScheduledItem(String id) async {
+    // Implementar exclusão no banco de dados
+  }
+}
