@@ -285,6 +285,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icons.fitness_center,
                           onTap: () => context.go('/atividades'),
                         ),
+                        // Mapa Diabetes (Google Maps)
+                        // Mapa (OpenStreetMap)
+                        _buildFeatureCard(
+                          context,
+                          title: 'Mapa Diabetes',
+                          icon: Icons.map_outlined,
+                          onTap: () => context.go('/mapa-diabetes'),
+                        ),
                         // Medicamentos
                         _buildFeatureCard(
                           context,

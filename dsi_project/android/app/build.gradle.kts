@@ -8,6 +8,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Load local.properties to expose MAPS_API_KEY as a manifest placeholder
+val localPropertiesFile = rootProject.file("local.properties")
+// Simple parser for local.properties (avoids java.util.Properties import issues)
+val localProperties = mutableMapOf<String, String>()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.readLines().forEach { raw ->
+        val line = raw.trim()
+        if (line.isEmpty() || line.startsWith("#")) return@forEach
+        val parts = line.split("=", limit = 2)
+        if (parts.size == 2) {
+            localProperties[parts[0].trim()] = parts[1].trim()
+        }
+    }
+}
+
 android {
     namespace = "com.example.dsi_project"
     compileSdk = flutter.compileSdkVersion
@@ -32,6 +47,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+    // Inject MAPS_API_KEY from local.properties into the Android manifest
+    manifestPlaceholders["MAPS_API_KEY"] = localProperties["MAPS_API_KEY"] ?: ""
     }
 
     buildTypes {

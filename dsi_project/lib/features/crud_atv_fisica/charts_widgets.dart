@@ -11,10 +11,10 @@ class HeatmapFrequencyWidget extends StatelessWidget {
   final Set<String> intensityFilters;
 
   const HeatmapFrequencyWidget({
-    Key? key,
+    super.key,
     this.tipoFilters = const {},
     this.intensityFilters = const {},
-  }) : super(key: key);
+  });
 
   Color _colorForMinutes(int mins) {
     if (mins == 0) return const Color(0xFFEBEDF0);
@@ -49,25 +49,31 @@ class HeatmapFrequencyWidget extends StatelessWidget {
             StreamBuilder<List<AtividadeFisica>>(
               stream: repo.streamAtividades(),
               builder: (context, snap) {
-                if (!snap.hasData)
+                if (!snap.hasData) {
                   return const SizedBox(
                     height: 220,
                     child: Center(child: CircularProgressIndicator()),
                   );
+                }
                 final items = snap.data!;
 
                 // totals per day in current month
                 final totals = <int, int>{};
-                for (int d = 1; d <= daysInMonth; d++) totals[d] = 0;
+                for (int d = 1; d <= daysInMonth; d++) {
+                  totals[d] = 0;
+                }
                 for (final a in items) {
                   if (a.dataHora.year != now.year ||
-                      a.dataHora.month != now.month)
+                      a.dataHora.month != now.month) {
                     continue;
-                  if (tipoFilters.isNotEmpty && !tipoFilters.contains(a.tipo))
+                  }
+                  if (tipoFilters.isNotEmpty && !tipoFilters.contains(a.tipo)) {
                     continue;
+                  }
                   if (intensityFilters.isNotEmpty &&
-                      !intensityFilters.contains(a.intensidade))
+                      !intensityFilters.contains(a.intensidade)) {
                     continue;
+                  }
                   totals[a.dataHora.day] =
                       (totals[a.dataHora.day] ?? 0) + a.duracao;
                 }
@@ -107,7 +113,7 @@ class HeatmapFrequencyWidget extends StatelessWidget {
                                 child: Tooltip(
                                   message: d == 0
                                       ? ''
-                                      : '${d}/${now.month}/${now.year}: $mins min',
+                                      : '$d/${now.month}/${now.year}: $mins min',
                                   child: GestureDetector(
                                     onTap: d == 0
                                         ? null
@@ -119,7 +125,7 @@ class HeatmapFrequencyWidget extends StatelessWidget {
                                                   'Dia $d ${DateFormat('MMMM yyyy').format(now)}',
                                                 ),
                                                 content: Text(
-                                                  'Total de exercício: ${mins} minutos',
+                                                  'Total de exercício: $mins minutos',
                                                 ),
                                                 actions: [
                                                   TextButton(
@@ -156,7 +162,7 @@ class HeatmapFrequencyWidget extends StatelessWidget {
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    '${mins} min',
+                                                    '$mins min',
                                                     style: const TextStyle(
                                                       fontSize: 10,
                                                       color: Colors.black87,
@@ -213,8 +219,7 @@ class _LegendItem extends StatelessWidget {
   final Color color;
   final String label;
 
-  const _LegendItem({Key? key, required this.color, required this.label})
-    : super(key: key);
+  const _LegendItem({super.key, required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -245,10 +250,10 @@ class WeeklyEvolutionBarChart extends StatefulWidget {
   final Set<String> intensityFilters;
 
   const WeeklyEvolutionBarChart({
-    Key? key,
+    super.key,
     this.tipoFilters = const {},
     this.intensityFilters = const {},
-  }) : super(key: key);
+  });
 
   @override
   State<WeeklyEvolutionBarChart> createState() =>
@@ -299,11 +304,12 @@ class _WeeklyEvolutionBarChartState extends State<WeeklyEvolutionBarChart>
             StreamBuilder<List<AtividadeFisica>>(
               stream: _repo.streamAtividades(),
               builder: (context, snap) {
-                if (!snap.hasData)
+                if (!snap.hasData) {
                   return const SizedBox(
                     height: 180,
                     child: Center(child: CircularProgressIndicator()),
                   );
+                }
                 final items = snap.data!;
 
                 // totals per weekday 1=Mon..7=Sun. We map to Seg..Dom
@@ -319,11 +325,13 @@ class _WeeklyEvolutionBarChartState extends State<WeeklyEvolutionBarChart>
                 final predominant = <int, String>{};
                 for (final a in items) {
                   if (widget.tipoFilters.isNotEmpty &&
-                      !widget.tipoFilters.contains(a.tipo))
+                      !widget.tipoFilters.contains(a.tipo)) {
                     continue;
+                  }
                   if (widget.intensityFilters.isNotEmpty &&
-                      !widget.intensityFilters.contains(a.intensidade))
+                      !widget.intensityFilters.contains(a.intensidade)) {
                     continue;
+                  }
                   final wd = a.dataHora.weekday;
                   totals[wd] = (totals[wd] ?? 0) + a.duracao;
                   predominant[wd] = a.intensidade;
@@ -378,7 +386,7 @@ class _WeeklyEvolutionBarChartState extends State<WeeklyEvolutionBarChart>
                                               '${days[i]} - Detalhes',
                                             ),
                                             content: Text(
-                                              'Total: ${value.toInt()} minutos\nIntensidade predominante: ${intensity}',
+                                              'Total: ${value.toInt()} minutos\nIntensidade predominante: $intensity',
                                             ),
                                             actions: [
                                               TextButton(
