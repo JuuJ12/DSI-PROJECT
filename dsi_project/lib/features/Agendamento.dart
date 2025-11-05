@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dsi_project/features/meals/my_meals_screen.dart';
+import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dsi_project/features/settings/settings_screen.dart';
+import 'package:dsi_project/data/repositories/auth_repository.dart';
+import 'package:dsi_project/data/repositories/meal_repository.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,8 +14,10 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AdvancedSchedulingScreen extends StatefulWidget {
+  const AdvancedSchedulingScreen({super.key});
+
   @override
-  _AdvancedSchedulingScreenState createState() => _AdvancedSchedulingScreenState();
+  State<AdvancedSchedulingScreen> createState() => _AdvancedSchedulingScreenState();
 }
 
 class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
@@ -18,11 +27,14 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
   final DeviceCalendarPlugin _deviceCalendarPlugin = DeviceCalendarPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final User? _user = FirebaseAuth.instance.currentUser;
+  final AuthRepository _authRepository = AuthRepository();
+  final MealRepository _mealRepository = MealRepository();
   
   List<ScheduleItem> _scheduledItems = [];
   List<Calendar> _calendars = [];
   Calendar? _selectedCalendar;
   bool _isLoading = true;
+  int _currentIndex = 1; // Índice para a navegação inferior
 
   @override
   void initState() {
@@ -67,7 +79,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         });
       }
     } catch (e) {
-      print('Erro ao inicializar calendário: $e');
+      debugPrint('Erro ao inicializar calendário: $e');
     }
   }
 
@@ -88,7 +100,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
 
       setState(() => _scheduledItems = items);
     } catch (e) {
-      print('Erro ao carregar agendamentos: $e');
+      debugPrint('Erro ao carregar agendamentos: $e');
     }
   }
 
@@ -106,24 +118,54 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        context.go('/meals');
+        break;
+      case 1:
+        // Já está na tela de agendamento
+        break;
+      case 2:
+        context.go('/chatbot');
+        break;
+      case 3:
+        context.go('/settings');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text('Agendamentos')),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(title: const Text('Agendamentos')),
+        body: const Center(child: CircularProgressIndicator()),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agendamentos Inteligentes'),
+        title: const Text('Agendamentos Inteligentes'),
         backgroundColor: Colors.blue.shade700,
         actions: [
           IconButton(
-            icon: Icon(Icons.sync),
+            icon: const Icon(Icons.sync),
             onPressed: _syncWithCalendar,
             tooltip: 'Sincronizar com Calendário',
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleAppBarMenuAction(value),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'export', child: Text('Exportar Dados')),
+              const PopupMenuItem(value: 'import', child: Text('Importar Dados')),
+              const PopupMenuItem(value: 'stats', child: Text('Estatísticas')),
+            ],
           ),
         ],
       ),
@@ -138,9 +180,36 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddScheduleDialog,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         backgroundColor: Colors.blue,
       ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: _onItemTapped,
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.restaurant),
+          label: 'Refeições',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.schedule),
+          label: 'Agendamentos',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat),
+          label: 'Chatbot',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Configurações',
+        ),
+      ],
     );
   }
 
@@ -152,9 +221,9 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         .length;
 
     return Card(
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -174,24 +243,24 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
           value,
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
         ),
-        Text(label, style: TextStyle(fontSize: 12)),
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }
 
   Widget _buildQuickScheduleButtons() {
     return Card(
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Agendamento Rápido',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -213,10 +282,16 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.schedule, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Nenhum agendamento encontrado'),
-            Text('Clique no + para adicionar'),
+            const Icon(Icons.schedule, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text('Nenhum agendamento encontrado'),
+            const Text('Clique no + para adicionar'),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _quickScheduleMeal,
+              icon: const Icon(Icons.restaurant),
+              label: const Text('Criar Primeira Refeição'),
+            ),
           ],
         ),
       );
@@ -242,14 +317,14 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         return true;
       },
       child: Card(
-        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: ListTile(
           leading: _getScheduleIcon(item.type),
           title: Row(
             children: [
               Expanded(child: Text(item.title)),
               if (item.isCompleted)
-                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                const Icon(Icons.check_circle, color: Colors.green, size: 16),
             ],
           ),
           subtitle: Column(
@@ -262,9 +337,9 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
               if (item.calendarEventId != null)
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 12),
-                    SizedBox(width: 4),
-                    Text('Sincronizado', style: TextStyle(fontSize: 10)),
+                    const Icon(Icons.calendar_today, size: 12),
+                    const SizedBox(width: 4),
+                    Text('Sincronizado', style: const TextStyle(fontSize: 10)),
                   ],
                 ),
             ],
@@ -280,9 +355,9 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
               PopupMenuButton<String>(
                 onSelected: (value) => _handleMenuAction(value, item),
                 itemBuilder: (context) => [
-                  PopupMenuItem(value: 'edit', child: Text('Editar')),
-                  PopupMenuItem(value: 'skip', child: Text('Pular Próxima')),
-                  PopupMenuItem(value: 'calendar', child: Text('Sincronizar Calendário')),
+                  const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                  const PopupMenuItem(value: 'skip', child: Text('Pular Próxima')),
+                  const PopupMenuItem(value: 'calendar', child: Text('Sincronizar Calendário')),
                 ],
               ),
             ],
@@ -290,6 +365,42 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildQuickButton(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            child: Icon(icon, color: Colors.white, size: 20),
+            backgroundColor: Colors.blue.shade600,
+            radius: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Icon _getScheduleIcon(ScheduleType type) {
+    switch (type) {
+      case ScheduleType.medication:
+        return const Icon(Icons.medical_services, color: Colors.red);
+      case ScheduleType.meal:
+        return const Icon(Icons.restaurant, color: Colors.green);
+      case ScheduleType.glucoseCheck:
+        return const Icon(Icons.monitor_heart, color: Colors.orange);
+      case ScheduleType.exercise:
+        return const Icon(Icons.fitness_center, color: Colors.blue);
+      default:
+        return const Icon(Icons.schedule, color: Colors.grey);
+    }
   }
 
   void _showAddScheduleDialog() {
@@ -301,7 +412,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         onCalendarChanged: (calendar) => setState(() => _selectedCalendar = calendar),
         onSave: (newItem) async {
           await _addScheduleItem(newItem);
-          Navigator.of(context).pop();
+          if (context.mounted) Navigator.of(context).pop();
         },
       ),
     );
@@ -329,15 +440,27 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
       }
 
       _loadScheduledItems();
+      
+      // Mostrar snackbar de confirmação
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${item.title} agendado com sucesso!')),
+        );
+      }
     } catch (e) {
-      print('Erro ao adicionar agendamento: $e');
+      debugPrint('Erro ao adicionar agendamento: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao agendar. Tente novamente.')),
+        );
+      }
     }
   }
 
   Future<void> _scheduleNotification(ScheduleItem item) async {
     if (!item.isActive) return;
 
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'schedule_channel',
       'Lembretes de Agendamento',
       channelDescription: 'Notificações para medicamentos, refeições e checkups',
@@ -350,7 +473,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
       ledOffMs: 500,
     );
 
-    final notificationDetails = NotificationDetails(android: androidDetails);
+    const notificationDetails = NotificationDetails(android: androidDetails);
 
     for (var scheduleTime in _calculateNotificationTimes(item)) {
       await notificationsPlugin.zonedSchedule(
@@ -397,17 +520,17 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
   DateTime _calculateNextDate(DateTime currentDate, RepeatType repeatType) {
     switch (repeatType) {
       case RepeatType.daily:
-        return currentDate.add(Duration(days: 1));
+        return currentDate.add(const Duration(days: 1));
       case RepeatType.weekly:
-        return currentDate.add(Duration(days: 7));
+        return currentDate.add(const Duration(days: 7));
       case RepeatType.monthly:
         return DateTime(currentDate.year, currentDate.month + 1, currentDate.day);
       case RepeatType.weekdays:
         return currentDate.add(Duration(days: currentDate.weekday == 5 ? 3 : 1));
       case RepeatType.custom:
-        return currentDate.add(Duration(days: 1));
+        return currentDate.add(const Duration(days: 1));
       default:
-        return currentDate.add(Duration(days: 365)); // Não repetir
+        return currentDate.add(const Duration(days: 365)); // Não repetir
     }
   }
 
@@ -437,7 +560,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
             .update({'calendarEventId': result.data});
       }
     } catch (e) {
-      print('Erro ao criar evento no calendário: $e');
+      debugPrint('Erro ao criar evento no calendário: $e');
     }
   }
 
@@ -467,7 +590,7 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
 
       _loadScheduledItems();
     } catch (e) {
-      print('Erro ao atualizar conclusão: $e');
+      debugPrint('Erro ao atualizar conclusão: $e');
     }
   }
 
@@ -477,13 +600,17 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
         await _createCalendarEvent(item);
       }
       _loadScheduledItems();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sincronização com calendário concluída')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sincronização com calendário concluída')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro na sincronização: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro na sincronização: $e')),
+        );
+      }
     }
   }
 
@@ -491,12 +618,12 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirmar Execução'),
-        content: Text('Deseja marcar esta atividade como concluída?'),
+        title: const Text('Confirmar Execução'),
+        content: const Text('Deseja marcar esta atividade como concluída?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Depois'),
+            child: const Text('Depois'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -504,24 +631,309 @@ class _AdvancedSchedulingScreenState extends State<AdvancedSchedulingScreen> {
               _toggleCompletion(item);
               Navigator.of(context).pop();
             },
-            child: Text('Concluir'),
+            child: const Text('Concluir'),
           ),
         ],
       ),
     );
   }
 
-  // ... Outros métodos auxiliares (_buildQuickButton, _getScheduleIcon, etc.)
+  Future<void> _deleteScheduleItem(ScheduleItem item) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_user!.uid)
+          .collection('schedules')
+          .doc(item.id)
+          .delete();
+
+      // Cancelar notificações
+      await notificationsPlugin.cancel(item.hashCode);
+
+      _loadScheduledItems();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Agendamento removido')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Erro ao deletar agendamento: $e');
+    }
+  }
+
+  Future<bool> _showDeleteConfirmation(ScheduleItem item) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: Text('Deseja excluir "${item.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
+  void _handleMenuAction(String action, ScheduleItem item) {
+    switch (action) {
+      case 'edit':
+        _editScheduleItem(item);
+        break;
+      case 'skip':
+        _skipNextOccurrence(item);
+        break;
+      case 'calendar':
+        _syncSingleItemWithCalendar(item);
+        break;
+    }
+  }
+
+  void _editScheduleItem(ScheduleItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => AdvancedScheduleDialog(
+        item: item,
+        calendars: _calendars,
+        selectedCalendar: _selectedCalendar,
+        onCalendarChanged: (calendar) => setState(() => _selectedCalendar = calendar),
+        onSave: (updatedItem) async {
+          await _updateScheduleItem(updatedItem);
+          if (context.mounted) Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  Future<void> _updateScheduleItem(ScheduleItem updatedItem) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_user!.uid)
+          .collection('schedules')
+          .doc(updatedItem.id)
+          .update(updatedItem.toFirestore());
+
+      // Recriar notificações
+      await notificationsPlugin.cancel(updatedItem.hashCode);
+      if (updatedItem.isActive) {
+        await _scheduleNotification(updatedItem);
+      }
+
+      _loadScheduledItems();
+    } catch (e) {
+      debugPrint('Erro ao atualizar agendamento: $e');
+    }
+  }
+
+  Future<void> _skipNextOccurrence(ScheduleItem item) async {
+    // Implementar lógica para pular próxima ocorrência
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Próxima ocorrência pulada')),
+      );
+    }
+  }
+
+  Future<void> _syncSingleItemWithCalendar(ScheduleItem item) async {
+    if (_selectedCalendar != null) {
+      await _createCalendarEvent(item);
+      _loadScheduledItems();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sincronizado com calendário')),
+        );
+      }
+    }
+  }
+
+  void _handleAppBarMenuAction(String value) {
+    switch (value) {
+      case 'export':
+        _exportData();
+        break;
+      case 'import':
+        _importData();
+        break;
+      case 'stats':
+        _showStatistics();
+        break;
+    }
+  }
+
+  Future<void> _exportData() async {
+    try {
+      final data = _scheduledItems.map((item) => item.toJson()).toList();
+      final jsonString = const JsonEncoder().convert(data);
+      
+      await Clipboard.setData(ClipboardData(text: jsonString));
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dados copiados para a área de transferência')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Erro ao exportar dados: $e');
+    }
+  }
+
+  Future<void> _importData() async {
+    // Implementar importação de dados
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
+      );
+    }
+  }
+
+  void _showStatistics() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Estatísticas'),
+        content: _buildStatisticsContent(),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsContent() {
+    final completed = _scheduledItems.where((item) => item.isCompleted).length;
+    final total = _scheduledItems.length;
+    final completionRate = total > 0 ? (completed / total * 100) : 0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Total de agendamentos: $total'),
+        Text('Concluídos: $completed'),
+        Text('Taxa de conclusão: ${completionRate.toStringAsFixed(1)}%'),
+        const SizedBox(height: 16),
+        ...ScheduleType.values.map((type) {
+          final count = _scheduledItems.where((item) => item.type == type).length;
+          return Text('${_getTypeLabel(type)}: $count');
+        }).toList(),
+      ],
+    );
+  }
+
+  // MÉTODOS DE AGENDAMENTO RÁPIDO
+  void _quickScheduleMeal() {
+    final now = TimeOfDay.now();
+    final mealTime = TimeOfDay(hour: (now.hour + 1) % 24, minute: now.minute);
+    
+    final mealItem = ScheduleItem(
+      id: '',
+      title: 'Refeição Principal',
+      type: ScheduleType.meal,
+      scheduledTime: mealTime,
+      startDate: DateTime.now(),
+      description: 'Não se esqueça de contar os carboidratos!',
+    );
+    
+    _addScheduleItem(mealItem);
+  }
+
+  void _quickScheduleMedication() {
+    final medicationItem = ScheduleItem(
+      id: '',
+      title: 'Medicação - Insulina',
+      type: ScheduleType.medication,
+      scheduledTime: TimeOfDay.now(),
+      startDate: DateTime.now(),
+      description: 'Aplicar insulina conforme prescrição',
+      repeatType: RepeatType.daily,
+    );
+    
+    _addScheduleItem(medicationItem);
+  }
+
+  void _quickScheduleGlucoseCheck() {
+    final glucoseItem = ScheduleItem(
+      id: '',
+      title: 'Verificação de Glicemia',
+      type: ScheduleType.glucoseCheck,
+      scheduledTime: TimeOfDay.now(),
+      startDate: DateTime.now(),
+      description: 'Medir glicemia antes da refeição',
+      repeatType: RepeatType.daily,
+    );
+    
+    _addScheduleItem(glucoseItem);
+  }
+
+  void _quickScheduleExercise() {
+    final exerciseItem = ScheduleItem(
+      id: '',
+      title: 'Atividade Física',
+      type: ScheduleType.exercise,
+      scheduledTime: TimeOfDay.now(),
+      startDate: DateTime.now(),
+      description: 'Caminhada de 30 minutos',
+      repeatType: RepeatType.weekdays,
+    );
+    
+    _addScheduleItem(exerciseItem);
+  }
+
+  // MÉTODOS AUXILIARES
+  String _getTypeLabel(ScheduleType type) {
+    switch (type) {
+      case ScheduleType.medication: return 'Medicação';
+      case ScheduleType.meal: return 'Refeição';
+      case ScheduleType.glucoseCheck: return 'Verificação Glicemia';
+      case ScheduleType.exercise: return 'Exercício';
+      default: return 'Outro';
+    }
+  }
+
+  String _getRepeatLabel(RepeatType type) {
+    switch (type) {
+      case RepeatType.none: return 'Não repete';
+      case RepeatType.daily: return 'Diariamente';
+      case RepeatType.weekly: return 'Semanalmente';
+      case RepeatType.monthly: return 'Mensalmente';
+      case RepeatType.weekdays: return 'Dias úteis';
+      case RepeatType.custom: return 'Personalizado';
+      default: return 'Não repete';
+    }
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+
+  String _formatDateTime(DateTime date) {
+    return DateFormat('dd/MM/yyyy HH:mm').format(date);
+  }
 }
 
 // DIÁLOGO AVANÇADO PARA AGENDAMENTO
 class AdvancedScheduleDialog extends StatefulWidget {
+  final ScheduleItem? item;
   final List<Calendar> calendars;
   final Calendar? selectedCalendar;
   final Function(Calendar?) onCalendarChanged;
   final Function(ScheduleItem) onSave;
 
   const AdvancedScheduleDialog({
+    this.item,
     required this.calendars,
     required this.selectedCalendar,
     required this.onCalendarChanged,
@@ -529,7 +941,7 @@ class AdvancedScheduleDialog extends StatefulWidget {
   });
 
   @override
-  _AdvancedScheduleDialogState createState() => _AdvancedScheduleDialogState();
+  State<AdvancedScheduleDialog> createState() => _AdvancedScheduleDialogState();
 }
 
 class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
@@ -544,37 +956,53 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
   int _durationMinutes = 30;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.item != null) {
+      _titleController.text = widget.item!.title;
+      _descriptionController.text = widget.item!.description ?? '';
+      _selectedTime = widget.item!.scheduledTime;
+      _selectedDate = widget.item!.startDate;
+      _selectedType = widget.item!.type;
+      _repeatType = widget.item!.repeatType;
+      _isActive = widget.item!.isActive;
+      _syncWithCalendar = widget.item!.syncWithCalendar;
+      _durationMinutes = widget.item!.durationMinutes;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Novo Agendamento Inteligente'),
+      title: Text(widget.item == null ? 'Novo Agendamento Inteligente' : 'Editar Agendamento'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: InputDecoration(labelText: 'Título *'),
+              decoration: const InputDecoration(labelText: 'Título *'),
             ),
             TextFormField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Descrição'),
+              decoration: const InputDecoration(labelText: 'Descrição'),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: ListTile(
-                    title: Text('Data'),
+                    title: const Text('Data'),
                     subtitle: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                    trailing: Icon(Icons.calendar_today),
+                    trailing: const Icon(Icons.calendar_today),
                     onTap: _selectDate,
                   ),
                 ),
                 Expanded(
                   child: ListTile(
-                    title: Text('Horário'),
+                    title: const Text('Horário'),
                     subtitle: Text(_selectedTime.format(context)),
-                    trailing: Icon(Icons.access_time),
+                    trailing: const Icon(Icons.access_time),
                     onTap: _selectTime,
                   ),
                 ),
@@ -589,7 +1017,7 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
                 );
               }).toList(),
               onChanged: (value) => setState(() => _selectedType = value!),
-              decoration: InputDecoration(labelText: 'Tipo de Atividade'),
+              decoration: const InputDecoration(labelText: 'Tipo de Atividade'),
             ),
             DropdownButtonFormField<RepeatType>(
               value: _repeatType,
@@ -600,15 +1028,15 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
                 );
               }).toList(),
               onChanged: (value) => setState(() => _repeatType = value!),
-              decoration: InputDecoration(labelText: 'Repetição'),
+              decoration: const InputDecoration(labelText: 'Repetição'),
             ),
             SwitchListTile(
-              title: Text('Ativo'),
+              title: const Text('Ativo'),
               value: _isActive,
               onChanged: (value) => setState(() => _isActive = value),
             ),
             SwitchListTile(
-              title: Text('Sincronizar com Calendário'),
+              title: const Text('Sincronizar com Calendário'),
               value: _syncWithCalendar,
               onChanged: (value) => setState(() => _syncWithCalendar = value),
             ),
@@ -622,7 +1050,7 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
                   );
                 }).toList(),
                 onChanged: widget.onCalendarChanged,
-                decoration: InputDecoration(labelText: 'Calendário'),
+                decoration: const InputDecoration(labelText: 'Calendário'),
               ),
             ],
           ],
@@ -631,11 +1059,11 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancelar'),
+          child: const Text('Cancelar'),
         ),
         ElevatedButton(
           onPressed: _save,
-          child: Text('Salvar'),
+          child: const Text('Salvar'),
         ),
       ],
     );
@@ -675,7 +1103,7 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
     );
 
     final item = ScheduleItem(
-      id: '', // Será gerado pelo Firestore
+      id: widget.item?.id ?? '',
       title: _titleController.text,
       description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
       type: _selectedType,
@@ -688,6 +1116,28 @@ class _AdvancedScheduleDialogState extends State<AdvancedScheduleDialog> {
     );
 
     widget.onSave(item);
+  }
+
+  String _getTypeLabel(ScheduleType type) {
+    switch (type) {
+      case ScheduleType.medication: return 'Medicação';
+      case ScheduleType.meal: return 'Refeição';
+      case ScheduleType.glucoseCheck: return 'Verificação Glicemia';
+      case ScheduleType.exercise: return 'Exercício';
+      default: return 'Outro';
+    }
+  }
+
+  String _getRepeatLabel(RepeatType type) {
+    switch (type) {
+      case RepeatType.none: return 'Não repete';
+      case RepeatType.daily: return 'Diariamente';
+      case RepeatType.weekly: return 'Semanalmente';
+      case RepeatType.monthly: return 'Mensalmente';
+      case RepeatType.weekdays: return 'Dias úteis';
+      case RepeatType.custom: return 'Personalizado';
+      default: return 'Não repete';
+    }
   }
 }
 
@@ -781,6 +1231,27 @@ class ScheduleItem {
     };
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'type': type.index,
+      'scheduledTime': {
+        'hour': scheduledTime.hour,
+        'minute': scheduledTime.minute,
+      },
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'repeatType': repeatType.index,
+      'isActive': isActive,
+      'isCompleted': isCompleted,
+      'calendarEventId': calendarEventId,
+      'syncWithCalendar': syncWithCalendar,
+      'durationMinutes': durationMinutes,
+    };
+  }
+
   factory ScheduleItem.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final scheduledTimeData = data['scheduledTime'] as Map<String, dynamic>;
@@ -812,17 +1283,17 @@ class ScheduleItem {
     while (next.isBefore(now)) {
       switch (repeat) {
         case RepeatType.daily:
-          next = next.add(Duration(days: 1));
+          next = next.add(const Duration(days: 1));
           break;
         case RepeatType.weekly:
-          next = next.add(Duration(days: 7));
+          next = next.add(const Duration(days: 7));
           break;
         case RepeatType.monthly:
           next = DateTime(next.year, next.month + 1, next.day);
           break;
         case RepeatType.weekdays:
-          next = next.add(Duration(days: 1));
-          if (next.weekday == 6) next = next.add(Duration(days: 2)); // Pula fim de semana
+          next = next.add(const Duration(days: 1));
+          if (next.weekday == 6) next = next.add(const Duration(days: 2)); // Pula fim de semana
           break;
         default:
           return next; // Não repete
@@ -831,150 +1302,4 @@ class ScheduleItem {
     
     return next;
   }
-}
-
-// MÉTODOS AUXILIARES (adicionar à classe principal)
-String _getTypeLabel(ScheduleType type) {
-  switch (type) {
-    case ScheduleType.medication: return 'Medicação';
-    case ScheduleType.meal: return 'Refeição';
-    case ScheduleType.glucoseCheck: return 'Verificação Glicemia';
-    case ScheduleType.exercise: return 'Exercício';
-    default: return 'Outro';
-  }
-}
-
-String _getRepeatLabel(RepeatType type) {
-  switch (type) {
-    case RepeatType.none: return 'Não repete';
-    case RepeatType.daily: return 'Diariamente';
-    case RepeatType.weekly: return 'Semanalmente';
-    case RepeatType.monthly: return 'Mensalmente';
-    case RepeatType.weekdays: return 'Dias úteis';
-    case RepeatType.custom: return 'Personalizado';
-    default: return 'Não repete';
-  }
-}
-
-bool _isToday(DateTime date) {
-  final now = DateTime.now();
-  return date.year == now.year && date.month == now.month && date.day == now.day;
-}
-
-String _formatDateTime(DateTime date) {
-  return DateFormat('dd/MM/yyyy HH:mm').format(date);
-}
-
-Widget _buildQuickButton(String label, IconData icon, VoidCallback onTap) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Column(
-      children: [
-        CircleAvatar(
-          child: Icon(icon, color: Colors.white, size: 20),
-          backgroundColor: Colors.blue.shade600,
-          radius: 20,
-        ),
-        SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ),
-  );
-}
-
-Icon _getScheduleIcon(ScheduleType type) {
-  switch (type) {
-    case ScheduleType.medication:
-      return Icon(Icons.medical_services, color: Colors.red);
-    case ScheduleType.meal:
-      return Icon(Icons.restaurant, color: Colors.green);
-    case ScheduleType.glucoseCheck:
-      return Icon(Icons.monitor_heart, color: Colors.orange);
-    case ScheduleType.exercise:
-      return Icon(Icons.fitness_center, color: Colors.blue);
-    default:
-      return Icon(Icons.schedule, color: Colors.grey);
-  }
-}
-
-Future<bool> _showDeleteConfirmation(ScheduleItem item) async {
-  // Implementar diálogo de confirmação
-  return true;
-}
-
-void _handleMenuAction(String action, ScheduleItem item) {
-  switch (action) {
-    case 'edit':
-      // Implementar edição
-      break;
-    case 'skip':
-      // Implementar pular próxima ocorrência
-      break;
-    case 'calendar':
-      // Implementar sincronização individual
-      break;
-  }
-}
-
-// MÉTODOS DE AGENDAMENTO RÁPIDO
-void _quickScheduleMeal() {
-  final now = TimeOfDay.now();
-  final mealTime = TimeOfDay(hour: (now.hour + 1) % 24, minute: now.minute);
-  
-  final mealItem = ScheduleItem(
-    id: '',
-    title: 'Refeição Principal',
-    type: ScheduleType.meal,
-    scheduledTime: mealTime,
-    startDate: DateTime.now(),
-    description: 'Não se esqueça de contar os carboidratos!',
-  );
-  
-  // _addScheduleItem(mealItem);
-}
-
-void _quickScheduleMedication() {
-  final medicationItem = ScheduleItem(
-    id: '',
-    title: 'Medicação - Insulina',
-    type: ScheduleType.medication,
-    scheduledTime: TimeOfDay.now(),
-    startDate: DateTime.now(),
-    description: 'Aplicar insulina conforme prescrição',
-    repeatType: RepeatType.daily,
-  );
-  
-  // _addScheduleItem(medicationItem);
-}
-
-void _quickScheduleGlucoseCheck() {
-  final glucoseItem = ScheduleItem(
-    id: '',
-    title: 'Verificação de Glicemia',
-    type: ScheduleType.glucoseCheck,
-    scheduledTime: TimeOfDay.now(),
-    startDate: DateTime.now(),
-    description: 'Medir glicemia antes da refeição',
-    repeatType: RepeatType.daily,
-  );
-  
-  // _addScheduleItem(glucoseItem);
-}
-
-void _quickScheduleExercise() {
-  final exerciseItem = ScheduleItem(
-    id: '',
-    title: 'Atividade Física',
-    type: ScheduleType.exercise,
-    scheduledTime: TimeOfDay.now(),
-    startDate: DateTime.now(),
-    description: 'Caminhada de 30 minutos',
-    repeatType: RepeatType.weekdays,
-  );
-  
-  // _addScheduleItem(exerciseItem);
 }
