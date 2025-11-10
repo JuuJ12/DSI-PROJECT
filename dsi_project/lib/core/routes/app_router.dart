@@ -74,10 +74,10 @@ GoRouter createRouter() {
         name: AppRoutes.mapaDiabetes.name,
         builder: (context, state) => const MapScreen(),
       ),
-      GoRoute(
-        path: '/recommendations',
-        builder: (context, state) => const RecommendationsScreen(),
-      ),
+      // GoRoute(
+      //   path: '/recommendations',
+      //   builder: (context, state) => const RecommendationsScreen(),
+      // ),
       // GoRoute(
       //   path: '/mealTracker',
       //   name: AppRoutes.mealTracker.name,
