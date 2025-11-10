@@ -186,16 +186,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Refeição salva com sucesso!'),
-            backgroundColor: Colors.green[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+        Navigator.pop(context); // Volta para a tela de listagem
       }
     } catch (e) {
       if (mounted) {
@@ -269,16 +260,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
         await _mealRepository.deleteMeal(widget.meal.id);
         if (mounted) {
           Navigator.pop(context); // Volta para a tela anterior
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Refeição excluída com sucesso!'),
-              backgroundColor: Colors.green[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
         }
       } catch (e) {
         if (mounted) {
@@ -385,16 +366,14 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   }
 
   Future<void> _showEditQuantityDialog(MealFood food) async {
-    FocusScope.of(context).unfocus();
-
-    final TextEditingController quantityController = TextEditingController(
+    final quantityController = TextEditingController(
       text: food.quantity.toStringAsFixed(0),
     );
 
     final result = await showDialog<double>(
       context: context,
       barrierDismissible: true,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -455,7 +434,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'Cancelar',
                 style: TextStyle(
@@ -468,15 +447,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
               onPressed: () {
                 final quantity = double.tryParse(quantityController.text);
                 if (quantity != null && quantity > 0) {
-                  Navigator.pop(context, quantity);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Digite uma quantidade válida'),
-                      backgroundColor: Colors.red[700],
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  Navigator.pop(dialogContext, quantity);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -500,23 +471,18 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
       },
     );
 
-    if (mounted) {
-      if (result != null) {
+    // Atualizar se houver resultado
+    if (result != null && mounted) {
+      final index = _localFoods.indexWhere((f) => f.foodId == food.foodId);
+      if (index != -1) {
         setState(() {
-          final index = _localFoods.indexWhere((f) => f.foodId == food.foodId);
-          if (index != -1) {
-            final updatedFoods = List<MealFood>.from(_localFoods);
-            updatedFoods[index] = updatedFoods[index].copyWith(
-              quantity: result,
-            );
-            _localFoods = updatedFoods;
-            _updateNutritionCache(); // Atualiza o cache
-          }
+          final updatedFoods = List<MealFood>.from(_localFoods);
+          updatedFoods[index] = updatedFoods[index].copyWith(quantity: result);
+          _localFoods = updatedFoods;
+          _updateNutritionCache();
         });
-
         _markAsChanged();
       }
-      quantityController.dispose();
     }
   }
 

@@ -35,6 +35,12 @@ class MealRepository {
     });
   }
 
+  Future<Meal?> getMealById(String mealId) async {
+    final doc = await _mealsCollection.doc(mealId).get();
+    if (!doc.exists) return null;
+    return Meal.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+  }
+
   Future<void> addFoodToMeal(String mealId, MealFood food) async {
     final doc = await _mealsCollection.doc(mealId).get();
     final data = doc.data() as Map<String, dynamic>;
