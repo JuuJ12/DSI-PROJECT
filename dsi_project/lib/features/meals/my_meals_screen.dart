@@ -59,218 +59,56 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
     });
   }
 
-  Future<void> _showAddMealDialog({Meal? mealToEdit}) async {
-    final TextEditingController nameController = TextEditingController(
-      text: mealToEdit?.name ?? '',
-    );
-    final TextEditingController timeController = TextEditingController(
-      text: mealToEdit?.time ?? '',
-    );
-
-    final result = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+  Future<void> _createNewMealAndNavigate() async {
+    final userId = _authRepository.currentUser?.uid;
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Erro: Usuário não autenticado'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
           ),
-          title: Text(
-            mealToEdit == null ? 'Nova Refeição' : 'Editar Refeição',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Nome da Refeição',
-                  hintText: 'Ex: Café da manhã, Lanche da tarde',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF1A1A1A),
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: timeController,
-                keyboardType: TextInputType.datetime,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Horário',
-                  hintText: 'Ex: 08:00, 12:30',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF1A1A1A),
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 20, color: Colors.grey[600]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Você poderá adicionar alimentos após criar a refeição',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancelar',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final name = nameController.text.trim();
-                final time = timeController.text.trim();
-                if (name.isNotEmpty && time.isNotEmpty) {
-                  Navigator.pop(context, {'name': name, 'time': time});
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Preencha todos os campos'),
-                      backgroundColor: Colors.red[700],
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1A1A1A),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                mealToEdit == null ? 'Criar' : 'Salvar',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
         );
-      },
-    );
-
-    if (result != null) {
-      final userId = _authRepository.currentUser?.uid;
-      if (userId != null) {
-        try {
-          if (mealToEdit == null) {
-            // Criar nova refeição
-            await _mealRepository.save(
-              userId,
-              result['name']!,
-              result['time']!,
-            );
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Refeição criada com sucesso!'),
-                  backgroundColor: Colors.green[700],
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
-            }
-          } else {
-            // Atualizar refeição existente
-            await _mealRepository.updateMeal(
-              mealToEdit.id,
-              result['name']!,
-              result['time']!,
-            );
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Refeição atualizada com sucesso!'),
-                  backgroundColor: Colors.green[700],
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Erro: $e'),
-                backgroundColor: Colors.red[700],
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        }
       }
+      return;
     }
 
-    // Descartar controllers após o próximo frame para evitar problemas
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      nameController.dispose();
-      timeController.dispose();
-    });
+    try {
+      // Cria uma nova refeição com valores padrão
+      final now = DateTime.now();
+      final defaultTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+      final mealId = await _mealRepository.save(
+        userId,
+        'Nova Refeição',
+        defaultTime,
+      );
+
+      // Busca a refeição criada para navegar para a tela de edição
+      final newMeal = await _mealRepository.getMealById(mealId);
+
+      if (newMeal != null && mounted) {
+        // Navega para a tela de detalhes/edição
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MealDetailsScreen(meal: newMeal),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao criar refeição: $e'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -497,7 +335,7 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
               ],
             ),
             child: ElevatedButton(
-              onPressed: _showAddMealDialog,
+              onPressed: _createNewMealAndNavigate,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1A1A1A),
                 foregroundColor: Colors.white,

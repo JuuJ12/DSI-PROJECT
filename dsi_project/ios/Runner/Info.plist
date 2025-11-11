@@ -50,6 +50,14 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Precisamos da sua localização para centralizar o mapa e exibir serviços próximos relacionados ao cuidado com diabetes.</string>
 
+	<!-- Permissões de câmera e galeria para image_picker -->
+	<key>NSCameraUsageDescription</key>
+	<string>Precisamos acessar sua câmera para tirar foto de perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Precisamos acessar sua galeria para selecionar foto de perfil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Precisamos salvar fotos na sua galeria.</string>
+
 	<!-- Chave da API do Google Maps (iOS) NÃO está colocada aqui para evitar versionamento.
 	Se desejar executar localmente, adicione a chave GMSApiKey em seu Info.plist local ou
 	coloque a chave em um arquivo local não versionado e adicione a entrada GMSApiKey. -->

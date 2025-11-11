@@ -2,7 +2,7 @@ name: dsi_project
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -33,8 +33,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+
   cupertino_icons: ^1.0.8
   go_router: ^16.2.2
   http: ^1.5.0
@@ -42,15 +41,18 @@ dependencies:
   firebase_auth: ^6.1.0
   cloud_firestore: ^6.0.2
   shared_preferences: ^2.1.1
-  # Bump fl_chart to a newer version that avoids usage of removed MediaQuery APIs
   fl_chart: ^1.1.1
-  # Google Maps (requires Android/iOS platform setup below)
-  # Removed google_maps_flutter - migrated to flutter_map (OpenStreetMap)
   flutter_map: ^8.2.0
   latlong2: ^0.9.0
   # Location helpers
   geolocator: ^14.0.2
   permission_handler: ^12.0.0
+
+  # Supabase e image upload
+  supabase_flutter: ^2.9.0
+  image_picker: ^1.0.7
+  image: ^4.1.7 # Para compressão de imagem
+  logger: ^2.0.0 # Logs profissionais
 
 dev_dependencies:
   flutter_test:
@@ -68,7 +70,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
