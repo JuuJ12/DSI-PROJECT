@@ -4,6 +4,7 @@ class UserModel {
   final String id;
   final String email;
   final String? displayName;
+  final String? profileImageUrl;
   final DateTime? dateOfBirth;
   final DateTime createdAt;
   final Map<String, dynamic>? extra; // campos adicionais
@@ -12,6 +13,7 @@ class UserModel {
     required this.id,
     required this.email,
     this.displayName,
+    this.profileImageUrl,
     this.dateOfBirth,
     DateTime? createdAt,
     this.extra,
@@ -21,6 +23,7 @@ class UserModel {
     String? id,
     String? email,
     String? displayName,
+    String? profileImageUrl,
     DateTime? dateOfBirth,
     DateTime? createdAt,
     Map<String, dynamic>? extra,
@@ -29,6 +32,7 @@ class UserModel {
       id: id ?? this.id,
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       createdAt: createdAt ?? this.createdAt,
       extra: extra ?? this.extra,
@@ -52,14 +56,17 @@ class UserModel {
       String iso => DateTime.tryParse(iso),
       _ => null,
     };
-    
+
     return UserModel(
       id: id,
       email: map['email'] as String? ?? '',
       displayName: map['displayName'] as String?,
+      profileImageUrl: map['profileImageUrl'] as String?,
       dateOfBirth: dob,
       createdAt: createdAt,
-      extra: map['extra'] != null ? Map<String, dynamic>.from(map['extra']) : null,
+      extra: map['extra'] != null
+          ? Map<String, dynamic>.from(map['extra'])
+          : null,
     );
   }
 
@@ -67,8 +74,11 @@ class UserModel {
     return {
       'email': email,
       'displayName': displayName,
+      'profileImageUrl': profileImageUrl,
       // Salva como Timestamp no Firestore
-      'dateOfBirth': dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
+      'dateOfBirth': dateOfBirth != null
+          ? Timestamp.fromDate(dateOfBirth!)
+          : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'extra': extra,
     };
