@@ -3,6 +3,7 @@ import 'package:dsi_project/features/meals/my_meals_screen.dart';
 import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dsi_project/features/settings/settings_screen.dart';
+import 'package:dsi_project/features/profile/edit_profile_screen.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
 import 'package:dsi_project/data/repositories/meal_repository.dart';
 import 'package:flutter/services.dart';
@@ -305,16 +306,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Meu perfil
-                    _buildWideFeatureCard(
-                      context,
-                      title: 'Meu perfil',
-                      icon: Icons.person_outline,
-                      onTap: () => _showComingSoon(context),
-                    ),
-
-                    const SizedBox(height: 24),
-
                     // Botão "Comece a monitorar"
                     Container(
                       width: double.infinity,
@@ -400,7 +391,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icons.person_outline,
                   label: '',
                   isSelected: false,
-                  onTap: () => _showComingSoon(context),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -494,54 +491,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[800],
                     height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWideFeatureCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 26, color: Colors.grey[700]),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
                   ),
                 ),
               ],
