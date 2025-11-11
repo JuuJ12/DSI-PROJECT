@@ -191,6 +191,9 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                           children: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx2),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.grey[600],
+                              ),
                               child: const Text('Cancelar'),
                             ),
                             const SizedBox(width: 8),
@@ -205,7 +208,21 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                                 });
                                 Navigator.pop(ctx2);
                               },
-                              child: const Text('Aplicar'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6B7B5E),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Aplicar',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ],
                         ),
@@ -232,15 +249,26 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
     final double heatmapHeight = (screenHeight * 0.36).clamp(240.0, 520.0);
     // (weekly chart se autoajusta; sem SizedBox externo)
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => context.go('/home'),
         ),
-        title: const Text('Atividades Físicas'),
+        title: const Text(
+          'Atividades Físicas',
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: Color(0xFF1A1A1A)),
             onPressed: _openFilterSheet,
           ),
         ],
@@ -280,12 +308,12 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                 );
                 final totalFormatted = formatDurationHours(totalMinutes);
                 return Card(
-                  color: const Color(0xFFF5F5F5),
+                  color: const Color(0xFF6B7B5E),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -296,15 +324,26 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                               'Você se exercitou por',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.black54,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               totalFormatted,
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'esta semana',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
@@ -312,7 +351,7 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
                         const Icon(
                           Icons.emoji_events,
                           color: Colors.amber,
-                          size: 32,
+                          size: 40,
                         ),
                       ],
                     ),
@@ -626,14 +665,50 @@ class _ListAtividadesScreenState extends State<ListAtividadesScreen> {
               },
             ),
           ),
+
+          // Botão Adicionar Atividade
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const CreateEditAtividadeScreen(),
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A1A1A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_circle_outline, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Adicionar Atividade',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const CreateEditAtividadeScreen()),
-        ),
-        backgroundColor: const Color(0xFF2196F3),
-        child: const Icon(Icons.add),
       ),
     );
   }

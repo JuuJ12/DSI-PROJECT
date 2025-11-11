@@ -18,6 +18,7 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
 
   List<Meal> _meals = [];
   List<Meal> _filteredMeals = [];
+  String _selectedPeriodFilter = 'hoje'; // 'hoje' | 'semana' | 'mes'
 
   @override
   void initState() {
@@ -47,15 +48,51 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
 
   void _filterMeals(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredMeals = _meals;
-      } else {
-        _filteredMeals = _meals
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      DateTime startDate;
+      DateTime endDate;
+
+      // Define o período baseado no filtro selecionado
+      switch (_selectedPeriodFilter) {
+        case 'hoje':
+          startDate = today;
+          endDate = today.add(const Duration(days: 1));
+          break;
+        case 'semana':
+          // Início da semana (segunda-feira)
+          startDate = today.subtract(Duration(days: now.weekday - 1));
+          endDate = startDate.add(const Duration(days: 7));
+          break;
+        case 'mes':
+          // Início do mês
+          startDate = DateTime(now.year, now.month, 1);
+          endDate = DateTime(now.year, now.month + 1, 1);
+          break;
+        default:
+          startDate = today;
+          endDate = today.add(const Duration(days: 1));
+      }
+
+      // Filtra refeições pelo período
+      var filtered = _meals.where((meal) {
+        return meal.createdAt.isAfter(
+              startDate.subtract(const Duration(seconds: 1)),
+            ) &&
+            meal.createdAt.isBefore(endDate);
+      }).toList();
+
+      // Aplica filtro de busca por nome se houver
+      if (query.isNotEmpty) {
+        filtered = filtered
             .where(
               (meal) => meal.name.toLowerCase().contains(query.toLowerCase()),
             )
             .toList();
       }
+
+      _filteredMeals = filtered;
     });
   }
 
@@ -109,6 +146,38 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
         );
       }
     }
+  }
+
+  Widget _buildPeriodFilterButton(String label, String value) {
+    final isSelected = _selectedPeriodFilter == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPeriodFilter = value;
+          _filterMeals(_searchController.text);
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6B7B5E) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6B7B5E) : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -190,6 +259,23 @@ class _MyMealsScreenState extends State<MyMealsScreen> {
               ),
             ),
           ),
+
+          // Filtros de Período
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(child: _buildPeriodFilterButton('Hoje', 'hoje')),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildPeriodFilterButton('Esta Semana', 'semana'),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: _buildPeriodFilterButton('Este Mês', 'mes')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // Lista de Refeições
           Expanded(

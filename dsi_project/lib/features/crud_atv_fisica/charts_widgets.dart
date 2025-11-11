@@ -38,176 +38,186 @@ class HeatmapFrequencyWidget extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '📅 Frequência de Exercícios — ${DateFormat('MMMM yyyy').format(now)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            StreamBuilder<List<AtividadeFisica>>(
-              stream: repo.streamAtividades(),
-              builder: (context, snap) {
-                if (!snap.hasData) {
-                  return const SizedBox(
-                    height: 220,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                final items = snap.data!;
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '📅 Frequência de Exercícios — ${DateFormat('MMMM yyyy').format(now)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              StreamBuilder<List<AtividadeFisica>>(
+                stream: repo.streamAtividades(),
+                builder: (context, snap) {
+                  if (!snap.hasData) {
+                    return const SizedBox(
+                      height: 220,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  final items = snap.data!;
 
-                // totals per day in current month
-                final totals = <int, int>{};
-                for (int d = 1; d <= daysInMonth; d++) {
-                  totals[d] = 0;
-                }
-                for (final a in items) {
-                  if (a.dataHora.year != now.year ||
-                      a.dataHora.month != now.month) {
-                    continue;
+                  // totals per day in current month
+                  final totals = <int, int>{};
+                  for (int d = 1; d <= daysInMonth; d++) {
+                    totals[d] = 0;
                   }
-                  if (tipoFilters.isNotEmpty && !tipoFilters.contains(a.tipo)) {
-                    continue;
-                  }
-                  if (intensityFilters.isNotEmpty &&
-                      !intensityFilters.contains(a.intensidade)) {
-                    continue;
-                  }
-                  totals[a.dataHora.day] =
-                      (totals[a.dataHora.day] ?? 0) + a.duracao;
-                }
-
-                // calendar grid generation (weeks rows x 7 columns)
-                final startWeekday = firstOfMonth.weekday % 7; // 0=Sun..6=Sat
-                final weeks = <List<int>>[];
-                int day = 1;
-                for (int wk = 0; wk < 6; wk++) {
-                  final row = <int>[];
-                  for (int wd = 0; wd < 7; wd++) {
-                    if (wk == 0 && wd < startWeekday) {
-                      row.add(0);
-                    } else if (day > daysInMonth) {
-                      row.add(0);
-                    } else {
-                      row.add(day);
-                      day++;
+                  for (final a in items) {
+                    if (a.dataHora.year != now.year ||
+                        a.dataHora.month != now.month) {
+                      continue;
                     }
+                    if (tipoFilters.isNotEmpty &&
+                        !tipoFilters.contains(a.tipo)) {
+                      continue;
+                    }
+                    if (intensityFilters.isNotEmpty &&
+                        !intensityFilters.contains(a.intensidade)) {
+                      continue;
+                    }
+                    totals[a.dataHora.day] =
+                        (totals[a.dataHora.day] ?? 0) + a.duracao;
                   }
-                  weeks.add(row);
-                  if (day > daysInMonth) break;
-                }
 
-                // weekday headers are implicit in the column alignment (Dom..Sab)
+                  // calendar grid generation (weeks rows x 7 columns)
+                  final startWeekday = firstOfMonth.weekday % 7; // 0=Sun..6=Sat
+                  final weeks = <List<int>>[];
+                  int day = 1;
+                  for (int wk = 0; wk < 6; wk++) {
+                    final row = <int>[];
+                    for (int wd = 0; wd < 7; wd++) {
+                      if (wk == 0 && wd < startWeekday) {
+                        row.add(0);
+                      } else if (day > daysInMonth) {
+                        row.add(0);
+                      } else {
+                        row.add(day);
+                        day++;
+                      }
+                    }
+                    weeks.add(row);
+                    if (day > daysInMonth) break;
+                  }
 
-                return Column(
-                  children: [
-                    Column(
-                      children: weeks.map((week) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: week.map((d) {
-                              final mins = d == 0 ? 0 : (totals[d] ?? 0);
-                              return Expanded(
-                                child: Tooltip(
-                                  message: d == 0
-                                      ? ''
-                                      : '$d/${now.month}/${now.year}: $mins min',
-                                  child: GestureDetector(
-                                    onTap: d == 0
-                                        ? null
-                                        : () {
-                                            showDialog<void>(
-                                              context: context,
-                                              builder: (_) => AlertDialog(
-                                                title: Text(
-                                                  'Dia $d ${DateFormat('MMMM yyyy').format(now)}',
-                                                ),
-                                                content: Text(
-                                                  'Total de exercício: $mins minutos',
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(context),
-                                                    child: const Text('Fechar'),
+                  // weekday headers are implicit in the column alignment (Dom..Sab)
+
+                  return Column(
+                    children: [
+                      Column(
+                        children: weeks.map((week) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: week.map((d) {
+                                final mins = d == 0 ? 0 : (totals[d] ?? 0);
+                                return Expanded(
+                                  child: Tooltip(
+                                    message: d == 0
+                                        ? ''
+                                        : '$d/${now.month}/${now.year}: $mins min',
+                                    child: GestureDetector(
+                                      onTap: d == 0
+                                          ? null
+                                          : () {
+                                              showDialog<void>(
+                                                context: context,
+                                                builder: (_) => AlertDialog(
+                                                  title: Text(
+                                                    'Dia $d ${DateFormat('MMMM yyyy').format(now)}',
                                                   ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                    child: Container(
-                                      height: 36,
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _colorForMinutes(mins),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Center(
-                                        child: d == 0
-                                            ? const SizedBox.shrink()
-                                            : Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    '$d',
-                                                    style: const TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w600,
+                                                  content: Text(
+                                                    'Total de exercício: $mins minutos',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            context,
+                                                          ),
+                                                      child: const Text(
+                                                        'Fechar',
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    '$mins min',
-                                                    style: const TextStyle(
-                                                      fontSize: 10,
-                                                      color: Colors.black87,
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                      child: Container(
+                                        height: 36,
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _colorForMinutes(mins),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: d == 0
+                                              ? const SizedBox.shrink()
+                                              : Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      '$d',
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      '$mins min',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      // legend
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _LegendItem(
+                            color: const Color(0xFFEBEDF0),
+                            label: 'Nenhum',
                           ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 8),
-                    // legend
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _LegendItem(
-                          color: const Color(0xFFEBEDF0),
-                          label: 'Nenhum',
-                        ),
-                        _LegendItem(
-                          color: const Color(0xFF9BE9A8),
-                          label: '1-30 min',
-                        ),
-                        _LegendItem(
-                          color: const Color(0xFF40C463),
-                          label: '31-60 min',
-                        ),
-                        _LegendItem(
-                          color: const Color(0xFF216E39),
-                          label: '61+ min',
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
+                          _LegendItem(
+                            color: const Color(0xFF9BE9A8),
+                            label: '1-30 min',
+                          ),
+                          _LegendItem(
+                            color: const Color(0xFF40C463),
+                            label: '31-60 min',
+                          ),
+                          _LegendItem(
+                            color: const Color(0xFF216E39),
+                            label: '61+ min',
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
