@@ -13,7 +13,6 @@ class MealRepository {
     final docRef = await _mealsCollection.add({
       'userId': userId,
       'name': name,
-      'imageUrl': _getDefaultImageUrl(name),
       'time': time,
       'createdAt': FieldValue.serverTimestamp(),
       'foods': [],
@@ -83,29 +82,10 @@ class MealRepository {
   }
 
   Future<void> updateMeal(String mealId, String name, String time) async {
-    await _mealsCollection.doc(mealId).update({
-      'name': name,
-      'time': time,
-      'imageUrl': _getDefaultImageUrl(name),
-    });
+    await _mealsCollection.doc(mealId).update({'name': name, 'time': time});
   }
 
   Future<void> deleteMeal(String mealId) async {
     await _mealsCollection.doc(mealId).delete();
-  }
-
-  String _getDefaultImageUrl(String mealName) {
-    // Retorna uma imagem padrão baseada no nome da refeição
-    final nameLower = mealName.toLowerCase();
-    if (nameLower.contains('café') || nameLower.contains('manhã')) {
-      return 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400';
-    } else if (nameLower.contains('almoço')) {
-      return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
-    } else if (nameLower.contains('jantar')) {
-      return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400';
-    } else if (nameLower.contains('lanche')) {
-      return 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400';
-    }
-    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
   }
 }

@@ -88,6 +88,34 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     }
   }
 
+  Color _getMealTypeColor(String mealName) {
+    final name = mealName.toLowerCase();
+    if (name.contains('café') || name.contains('manhã')) {
+      return const Color(0xFFFFB74D); // Laranja para café
+    } else if (name.contains('almoço')) {
+      return const Color(0xFF66BB6A); // Verde para almoço
+    } else if (name.contains('jantar')) {
+      return const Color(0xFF5C6BC0); // Azul para jantar
+    } else if (name.contains('lanche')) {
+      return const Color(0xFFEC407A); // Rosa para lanche
+    }
+    return const Color(0xFF78909C); // Cinza padrão
+  }
+
+  IconData _getMealTypeIcon(String mealName) {
+    final name = mealName.toLowerCase();
+    if (name.contains('café') || name.contains('manhã')) {
+      return Icons.free_breakfast;
+    } else if (name.contains('almoço')) {
+      return Icons.restaurant;
+    } else if (name.contains('jantar')) {
+      return Icons.dinner_dining;
+    } else if (name.contains('lanche')) {
+      return Icons.cookie;
+    }
+    return Icons.restaurant_menu;
+  }
+
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges) {
       return true;
@@ -553,11 +581,21 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
+                              color: _getMealTypeColor(
+                                meal.name,
+                              ).withOpacity(0.15),
                               borderRadius: BorderRadius.circular(12),
-                              image: DecorationImage(
-                                image: NetworkImage(meal.imageUrl),
-                                fit: BoxFit.cover,
+                              border: Border.all(
+                                color: _getMealTypeColor(
+                                  meal.name,
+                                ).withOpacity(0.3),
+                                width: 2,
                               ),
+                            ),
+                            child: Icon(
+                              _getMealTypeIcon(meal.name),
+                              size: 40,
+                              color: _getMealTypeColor(meal.name),
                             ),
                           ),
                           const SizedBox(width: 16),

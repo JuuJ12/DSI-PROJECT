@@ -278,8 +278,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Assistente Nutricionista
                         _buildFeatureCard(
                           context,
+                          title: 'Mapa Diabetes',
+                          icon: "assets/images/mapa_icon.png",
+                          useAssetImage: true,
+                          onTap: () => context.go('/mapa-diabetes'),
+                        ),
+                        // Atividade Física
+                        _buildFeatureCard(
+                          context,
+                          title: 'Atividade Física',
+                          icon: "assets/images/atividade_fisica_icon.png",
+                          useAssetImage: true,
+                          onTap: () => context.go('/atividades'),
+                        ),
+                        _buildFeatureCard(
+                          context,
                           title: 'Assistente Nutricionista',
-                          icon: Icons.psychology_outlined,
+                          icon: "assets/images/assistente_icon.png",
+                          useAssetImage: true,
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -287,21 +303,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                        ),
-                        // Atividade Física
-                        _buildFeatureCard(
-                          context,
-                          title: 'Atividade Física',
-                          icon: Icons.fitness_center,
-                          onTap: () => context.go('/atividades'),
-                        ),
-                        // Mapa Diabetes (Google Maps)
-                        // Mapa (OpenStreetMap)
-                        _buildFeatureCard(
-                          context,
-                          title: 'Mapa Diabetes',
-                          icon: Icons.map_outlined,
-                          onTap: () => context.go('/mapa-diabetes'),
                         ),
                       ],
                     ),

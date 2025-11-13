@@ -48,6 +48,34 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
     }
   }
 
+  Color _getMealTypeColor(String mealName) {
+    final name = mealName.toLowerCase();
+    if (name.contains('café') || name.contains('manhã')) {
+      return const Color(0xFFFFB74D); // Laranja para café
+    } else if (name.contains('almoço')) {
+      return const Color(0xFF66BB6A); // Verde para almoço
+    } else if (name.contains('jantar')) {
+      return const Color(0xFF5C6BC0); // Azul para jantar
+    } else if (name.contains('lanche')) {
+      return const Color(0xFFEC407A); // Rosa para lanche
+    }
+    return const Color(0xFF78909C); // Cinza padrão
+  }
+
+  IconData _getMealTypeIcon(String mealName) {
+    final name = mealName.toLowerCase();
+    if (name.contains('café') || name.contains('manhã')) {
+      return Icons.free_breakfast;
+    } else if (name.contains('almoço')) {
+      return Icons.restaurant;
+    } else if (name.contains('jantar')) {
+      return Icons.dinner_dining;
+    } else if (name.contains('lanche')) {
+      return Icons.cookie;
+    }
+    return Icons.restaurant_menu;
+  }
+
   Future<void> _searchFoods(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -395,44 +423,43 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Imagem da Refeição
+                  // Ícone Colorido da Refeição
                   Container(
                     height: 120,
                     decoration: BoxDecoration(
+                      color: _getMealTypeColor(meal.name).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected
                             ? const Color(0xFF1A1A1A)
-                            : Colors.transparent,
-                        width: 3,
-                      ),
-                      image: DecorationImage(
-                        image: NetworkImage(meal.imageUrl),
-                        fit: BoxFit.cover,
+                            : _getMealTypeColor(meal.name).withOpacity(0.3),
+                        width: isSelected ? 3 : 2,
                       ),
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
-                          ],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _getMealTypeIcon(meal.name),
+                          size: 48,
+                          color: _getMealTypeColor(meal.name),
                         ),
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      alignment: Alignment.bottomLeft,
-                      child: Text(
-                        meal.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            meal.name,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: _getMealTypeColor(meal.name),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
