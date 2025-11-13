@@ -259,11 +259,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           useAssetImage: true,
                           onTap: () => _navigateToMyMeals(context),
                         ),
-                        // Minhas métricas
+                        // Medicamentos
                         _buildFeatureCard(
                           context,
-                          title: 'Minhas métricas',
-                          icon: Icons.straighten,
+                          title: 'Medicamentos',
+                          icon: Icons.medical_services_outlined,
                           onTap: () => _showComingSoon(context),
                         ),
                         // Assistente Nutricionista
@@ -293,13 +293,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Mapa Diabetes',
                           icon: Icons.map_outlined,
                           onTap: () => context.go('/mapa-diabetes'),
-                        ),
-                        // Medicamentos
-                        _buildFeatureCard(
-                          context,
-                          title: 'Medicamentos',
-                          icon: Icons.medication_outlined,
-                          onTap: () => _showComingSoon(context),
                         ),
                       ],
                     ),
