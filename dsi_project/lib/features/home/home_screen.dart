@@ -4,6 +4,7 @@ import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dsi_project/features/settings/settings_screen.dart';
 import 'package:dsi_project/features/profile/edit_profile_screen.dart';
+import 'package:dsi_project/features/medicamentos/list_medicamentos_screen.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
 import 'package:dsi_project/data/repositories/meal_repository.dart';
 import 'package:flutter/services.dart';
@@ -263,8 +264,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildFeatureCard(
                           context,
                           title: 'Medicamentos',
-                          icon: Icons.medical_services_outlined,
-                          onTap: () => _showComingSoon(context),
+                          icon: 'assets/images/medicamentos_icon.png',
+                          useAssetImage: true,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ListMedicamentosScreen(),
+                              ),
+                            );
+                          },
                         ),
                         // Assistente Nutricionista
                         _buildFeatureCard(
