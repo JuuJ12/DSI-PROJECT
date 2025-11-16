@@ -72,7 +72,8 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     final headers = {
-      'User-Agent': 'dsi_project/1.0 (contato: dev@example.com)',
+      'User-Agent':
+          'DSI-Project-App/1.0 (https://github.com/JuuJ12/DSI-PROJECT)',
     };
     final resp = await http
         .get(uri, headers: headers)
@@ -167,6 +168,7 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       final aggregated = dedupe.values.toList();
+      print('Total agregados: ${aggregated.length}');
       if (mounted) setState(() => _places = aggregated);
 
       if (aggregated.isEmpty) {
@@ -196,6 +198,90 @@ class _MapScreenState extends State<MapScreen> {
       default:
         return '📍';
     }
+  }
+
+  // Parse display_name into structured address components
+  Map<String, String> _parseAddress(String displayName) {
+    final parts = displayName.split(',').map((s) => s.trim()).toList();
+    final address = <String, String>{};
+
+    if (parts.isNotEmpty) address['name'] = parts[0];
+    if (parts.length > 1) address['street'] = parts[1];
+    if (parts.length > 2) address['neighborhood'] = parts[2];
+    if (parts.length > 3) address['city'] = parts[3];
+    if (parts.length > 4) address['state'] = parts[4];
+
+    // Extract CEP (Brazilian postal code) - usually 8 digits with optional dash
+    final cepRegex = RegExp(r'\b\d{5}-?\d{3}\b');
+    final cepMatch = cepRegex.firstMatch(displayName);
+    if (cepMatch != null) address['cep'] = cepMatch.group(0)!;
+
+    return address;
+  }
+
+  Widget _buildAddressSection(Map<String, String> address) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Endereço',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 4),
+        if (address['street'] != null)
+          Row(
+            children: [
+              const Icon(Icons.streetview, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  address['street']!,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        if (address['neighborhood'] != null)
+          Row(
+            children: [
+              const Icon(Icons.location_city, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  address['neighborhood']!,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        if (address['city'] != null || address['state'] != null)
+          Row(
+            children: [
+              const Icon(Icons.map, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${address['city'] ?? ''}${address['city'] != null && address['state'] != null ? ', ' : ''}${address['state'] ?? ''}'
+                      .trim(),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        if (address['cep'] != null)
+          Row(
+            children: [
+              const Icon(Icons.mail, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                'CEP: ${address['cep']}',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
   }
 
   String _labelForType(String tipo) {
@@ -398,12 +484,13 @@ class _MapScreenState extends State<MapScreen> {
       _mapController.move(p.latLng, _currentZoom);
     } catch (_) {}
 
+    final address = _parseAddress(p.name);
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       builder: (ctx) {
-        final maxHeight = MediaQuery.of(ctx).size.height * 0.6;
         return DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.25,
@@ -431,39 +518,50 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  // short title (first segment or truncated) to avoid duplicating the full description
-                  Builder(
-                    builder: (ctx2) {
-                      final firstSegment = p.name.split(',').first.trim();
-                      final shortTitle = (firstSegment.isNotEmpty)
-                          ? (firstSegment.length > 60
-                                ? '${firstSegment.substring(0, 60)}…'
-                                : firstSegment)
-                          : (p.name.length > 60
-                                ? '${p.name.substring(0, 60)}…'
-                                : p.name);
-                      return Text(
-                        shortTitle,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                  // Title with icon
+                  Row(
+                    children: [
+                      Text(
+                        _emojiForType(p.tipo),
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          address['name'] ?? p.name.split(',').first.trim(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Coordenadas: ${p.latLng.latitude.toStringAsFixed(6)}, ${p.latLng.longitude.toStringAsFixed(6)}',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
-                  // full description (scrollable) — avoid duplicating the short title above
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: maxHeight * 0.6),
-                    child: SingleChildScrollView(
-                      child: Text(p.name, softWrap: true),
-                    ),
+                  // Address section
+                  if (address['street'] != null ||
+                      address['neighborhood'] != null)
+                    _buildAddressSection(address),
+                  // Coordinates
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${p.latLng.latitude.toStringAsFixed(6)}, ${p.latLng.longitude.toStringAsFixed(6)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
+                  // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
