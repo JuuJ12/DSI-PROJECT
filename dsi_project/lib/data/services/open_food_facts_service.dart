@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:dsi_project/domain/food_item_model.dart';
 
@@ -15,7 +16,8 @@ class OpenFoodFactsService {
           'search_terms': query,
           'page_size': '50',
           'json': '1',
-          'fields': 'product_name,brands,nutriments,categories,image_url,code',
+          'fields':
+              'product_name,brands,nutriments,categories,image_url,code,quantity,serving_size,serving_quantity,serving_quantity_unit',
           'countries_tags': 'brazil',
         },
       );
@@ -44,6 +46,12 @@ class OpenFoodFactsService {
       }
 
       return [];
+    } on TimeoutException catch (e) {
+      print('Timeout ao buscar alimentos (30s): $e');
+      return [];
+    } on http.ClientException catch (e) {
+      print('Erro de conexão com Open Food Facts: $e');
+      return [];
     } catch (e) {
       print('Erro ao buscar alimentos na Open Food Facts: $e');
       return [];
@@ -56,7 +64,7 @@ class OpenFoodFactsService {
 
       final response = await http
           .get(uri, headers: {'User-Agent': 'DSI-Project-App/1.0'})
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -65,6 +73,12 @@ class OpenFoodFactsService {
         }
       }
 
+      return null;
+    } on TimeoutException catch (e) {
+      print('Timeout ao buscar código de barras (30s): $e');
+      return null;
+    } on http.ClientException catch (e) {
+      print('Erro de conexão ao buscar código de barras: $e');
       return null;
     } catch (e) {
       print('Erro ao buscar produto por código de barras: $e');
@@ -116,7 +130,9 @@ class OpenFoodFactsService {
 
       final servingSize = _extractServingSize(name, product);
 
-      final isLiquid = _isLiquidProduct(name, category);
+      // Verificar unidade da API primeiro
+      final servingUnit = product['serving_quantity_unit'] as String?;
+      final isLiquid = _determineIfLiquid(servingUnit, name, category);
 
       return FoodItem(
         id: 'off_$id',
@@ -264,70 +280,19 @@ class OpenFoodFactsService {
     return 'Outros';
   }
 
-  bool _isLiquidProduct(String name, String category) {
-    final nameLower = name.toLowerCase();
-    final categoryLower = category.toLowerCase();
-
-    final beverageKeywords = [
-      'coca',
-      'pepsi',
-      'refrigerante',
-      'soda',
-      'soft drink',
-      'juice',
-      'suco',
-      'néctar',
-      'water',
-      'água',
-      'mineral',
-      'beer',
-      'cerveja',
-      'wine',
-      'vinho',
-      'milk',
-      'leite',
-      'coffee',
-      'café',
-      'tea',
-      'chá',
-      'energy drink',
-      'energético',
-      'isotonic',
-      'isotônico',
-      'gatorade',
-      'shake',
-      'vitamina',
-      'bebida',
-      'beverage',
-      'drink',
-      'lata',
-      'can',
-      'garrafa',
-      'bottle',
-    ];
-
-    final liquidUnits = ['ml', 'l', 'litro'];
-
-    for (final keyword in beverageKeywords) {
-      if (nameLower.contains(keyword)) return true;
+  bool _determineIfLiquid(String? servingUnit, String name, String category) {
+    // Usar apenas a unidade da API
+    if (servingUnit != null) {
+      final unitLower = servingUnit.toLowerCase();
+      if (unitLower == 'ml' ||
+          unitLower == 'l' ||
+          unitLower == 'cl' ||
+          unitLower == 'dl') {
+        return true;
+      }
     }
 
-    for (final unit in liquidUnits) {
-      if (nameLower.contains(unit)) return true;
-    }
-
-    if (categoryLower.contains('beverage') ||
-        categoryLower.contains('drink') ||
-        categoryLower.contains('bebida') ||
-        categoryLower.contains('juice') ||
-        categoryLower.contains('suco') ||
-        categoryLower.contains('water') ||
-        categoryLower.contains('água') ||
-        categoryLower.contains('milk') ||
-        categoryLower.contains('leite')) {
-      return true;
-    }
-
+    // Padrão: sólido
     return false;
   }
 }
