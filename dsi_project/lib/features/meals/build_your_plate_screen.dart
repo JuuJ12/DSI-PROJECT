@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
 import 'package:dsi_project/data/repositories/meal_repository.dart';
@@ -22,6 +23,8 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
   List<Meal> _meals = [];
   List<FoodItem> _searchResults = [];
   bool _isSearching = false;
+  bool _isLoading = false; // Indicador de carregamento
+  Timer? _debounceTimer; // Timer para debounce de 500ms
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -77,25 +81,47 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
   }
 
   Future<void> _searchFoods(String query) async {
-    if (query.isEmpty) {
+    _debounceTimer?.cancel();
+
+    if (query.trim().isEmpty) {
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _isLoading = false;
       });
       return;
     }
 
     setState(() {
       _isSearching = true;
+      _isLoading = true; // Mostra loading
     });
 
-    final results = await _foodRepository.searchFoods(query);
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final results = await _foodRepository.searchFoods(query);
 
-    if (mounted) {
-      setState(() {
-        _searchResults = results;
-      });
-    }
+        if (mounted) {
+          setState(() {
+            _searchResults = results;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao buscar alimentos: $e'),
+              backgroundColor: Colors.red[700],
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    });
   }
 
   Future<void> _addFoodToMeal(FoodItem food) async {
@@ -105,16 +131,16 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
     final mealFood = MealFood(
       foodId: food.id,
       name: food.name,
-      quantity: 100, // quantidade padrão: 100g
+      quantity: food.servingSizeGrams ?? 100, // Porção sugerida ou 100g
       caloriesPer100g: food.caloriesPer100g,
       carbsPer100g: food.carbsPer100g,
       proteinsPer100g: food.proteinsPer100g,
       fatsPer100g: food.fatsPer100g,
+      isLiquid: food.isLiquid, // Propagar isLiquid
     );
 
     await _mealRepository.addFoodToMeal(meal.id, mealFood);
 
-    // Limpar pesquisa após adicionar
     _searchController.clear();
     setState(() {
       _searchResults = [];
@@ -138,7 +164,6 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
   Future<void> _removeFoodFromMeal(String foodId) async {
     if (_meals.isEmpty) return;
 
-    // Remover foco do campo de pesquisa para evitar abrir o teclado
     FocusScope.of(context).unfocus();
 
     final meal = _meals[_selectedMealIndex];
@@ -200,9 +225,9 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
                   fontWeight: FontWeight.w600,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Quantidade (gramas)',
+                  labelText: 'Quantidade (${food.isLiquid ? 'ml' : 'gramas'})',
                   hintText: '100',
-                  suffixText: 'g',
+                  suffixText: food.unit,
                   suffixStyle: TextStyle(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -311,7 +336,6 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
       },
     );
 
-    // Sempre remover foco ao fechar o diálogo (cancelar ou salvar)
     if (mounted) {
       FocusScope.of(context).unfocus();
     }
@@ -324,7 +348,7 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Quantidade atualizada para ${result.toStringAsFixed(0)}g',
+              'Quantidade atualizada para ${result.toStringAsFixed(0)}${food.unit}',
             ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green[700],
@@ -336,7 +360,6 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
       }
     }
 
-    // Aguardar o próximo frame antes de descartar o controller
     WidgetsBinding.instance.addPostFrameCallback((_) {
       quantityController.dispose();
     });
@@ -368,17 +391,14 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: Column(
           children: [
-            // Carrossel de Refeições
             _buildMealCarousel(),
 
             const SizedBox(height: 16),
 
-            // Campo de Pesquisa
             _buildSearchField(),
 
             const SizedBox(height: 12),
 
-            // Resultados da Pesquisa ou Lista de Itens Adicionados
             Expanded(
               child: _isSearching ? _buildSearchResults() : _buildAddedItems(),
             ),
@@ -540,6 +560,29 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
   }
 
   Widget _buildSearchResults() {
+    // Mostrar loading spinner enquanto carrega
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B7B5E)),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Buscando alimentos...',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_searchResults.isEmpty) {
       return Center(
         child: Column(
@@ -738,7 +781,7 @@ class _BuildYourPlateScreenState extends State<BuildYourPlateScreen> {
                           border: Border.all(color: Colors.grey[300]!),
                         ),
                         child: Text(
-                          '${food.quantity.toStringAsFixed(0)}g',
+                          '${food.quantity.toStringAsFixed(0)}${food.unit}',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,

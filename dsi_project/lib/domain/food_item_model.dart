@@ -9,6 +9,10 @@ class FoodItem {
   final double fatsPer100g; // gorduras em gramas
   final String? imageUrl;
 
+  final double? servingSizeGrams;
+
+  final bool isLiquid;
+
   FoodItem({
     required this.id,
     required this.name,
@@ -18,6 +22,8 @@ class FoodItem {
     required this.proteinsPer100g,
     required this.fatsPer100g,
     this.imageUrl,
+    this.servingSizeGrams,
+    this.isLiquid = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +35,8 @@ class FoodItem {
       'proteinsPer100g': proteinsPer100g,
       'fatsPer100g': fatsPer100g,
       'imageUrl': imageUrl,
+      'servingSizeGrams': servingSizeGrams,
+      'isLiquid': isLiquid,
     };
   }
 
@@ -42,6 +50,10 @@ class FoodItem {
       proteinsPer100g: (map['proteinsPer100g'] ?? 0).toDouble(),
       fatsPer100g: (map['fatsPer100g'] ?? 0).toDouble(),
       imageUrl: map['imageUrl'],
+      servingSizeGrams: map['servingSizeGrams'] != null
+          ? (map['servingSizeGrams'] as num).toDouble()
+          : null,
+      isLiquid: (map['isLiquid'] as bool?) ?? false,
     );
   }
 
@@ -54,6 +66,8 @@ class FoodItem {
     double? proteinsPer100g,
     double? fatsPer100g,
     String? imageUrl,
+    double? servingSizeGrams,
+    bool? isLiquid,
   }) {
     return FoodItem(
       id: id ?? this.id,
@@ -64,6 +78,10 @@ class FoodItem {
       proteinsPer100g: proteinsPer100g ?? this.proteinsPer100g,
       fatsPer100g: fatsPer100g ?? this.fatsPer100g,
       imageUrl: imageUrl ?? this.imageUrl,
+      servingSizeGrams: servingSizeGrams ?? this.servingSizeGrams,
+      isLiquid: isLiquid ?? this.isLiquid,
     );
   }
+
+  String get unit => isLiquid ? 'ml' : 'g';
 }

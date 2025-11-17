@@ -86,6 +86,7 @@ class MealFood {
   final double carbsPer100g;
   final double proteinsPer100g;
   final double fatsPer100g;
+  final bool isLiquid;
 
   MealFood({
     required this.foodId,
@@ -95,6 +96,7 @@ class MealFood {
     required this.carbsPer100g,
     required this.proteinsPer100g,
     required this.fatsPer100g,
+    this.isLiquid = false,
   });
 
   double get totalCalories => (caloriesPer100g * quantity) / 100;
@@ -105,6 +107,8 @@ class MealFood {
 
   double get totalFats => (fatsPer100g * quantity) / 100;
 
+  String get unit => isLiquid ? 'ml' : 'g';
+
   Map<String, dynamic> toMap() {
     return {
       'foodId': foodId,
@@ -114,6 +118,7 @@ class MealFood {
       'carbsPer100g': carbsPer100g,
       'proteinsPer100g': proteinsPer100g,
       'fatsPer100g': fatsPer100g,
+      'isLiquid': isLiquid,
     };
   }
 
@@ -126,6 +131,7 @@ class MealFood {
       carbsPer100g: (map['carbsPer100g'] ?? 0).toDouble(),
       proteinsPer100g: (map['proteinsPer100g'] ?? 0).toDouble(),
       fatsPer100g: (map['fatsPer100g'] ?? 0).toDouble(),
+      isLiquid: (map['isLiquid'] as bool?) ?? false,
     );
   }
 
@@ -137,6 +143,7 @@ class MealFood {
     double? carbsPer100g,
     double? proteinsPer100g,
     double? fatsPer100g,
+    bool? isLiquid,
   }) {
     return MealFood(
       foodId: foodId ?? this.foodId,
@@ -146,6 +153,7 @@ class MealFood {
       carbsPer100g: carbsPer100g ?? this.carbsPer100g,
       proteinsPer100g: proteinsPer100g ?? this.proteinsPer100g,
       fatsPer100g: fatsPer100g ?? this.fatsPer100g,
+      isLiquid: isLiquid ?? this.isLiquid,
     );
   }
 }

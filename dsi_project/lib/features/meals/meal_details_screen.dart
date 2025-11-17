@@ -24,13 +24,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   Meal? _currentMeal;
   List<FoodItem> _searchResults = [];
   bool _isSearching = false;
+  bool _isLoading = false; // Loading indicator
   bool _hasUnsavedChanges = false;
   List<MealFood> _localFoods =
-      []; // Lista local de alimentos (não salva até clicar em Salvar)
-  Timer? _debounceTimer; // Timer para debounce da pesquisa
-  StreamSubscription? _mealSubscription; // Subscription para controlar o stream
+      [];
+  Timer? _debounceTimer; 
+  StreamSubscription? _mealSubscription; 
 
-  // Cache dos valores nutricionais para evitar recalcular toda vez
   double _cachedCalories = 0;
   double _cachedCarbs = 0;
   double _cachedProteins = 0;
@@ -44,8 +44,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     _timeController.text = widget.meal.time;
     _localFoods = List.from(
       widget.meal.foods,
-    ); // Cópia local da lista de alimentos
-    _updateNutritionCache(); // Inicializa o cache
+    ); 
+    _updateNutritionCache();
   }
 
   @override
@@ -59,7 +59,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   }
 
   void _loadMeal() {
-    _mealSubscription?.cancel(); // Cancela subscription anterior se existir
+    _mealSubscription?.cancel();
     _mealSubscription = _mealRepository
         .getMealsByUser(widget.meal.userId)
         .listen((meals) {
@@ -70,7 +70,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
           if (mounted) {
             setState(() {
               _currentMeal = meal;
-              // Só atualiza a lista local se não houver mudanças não salvas
               if (!_hasUnsavedChanges) {
                 _localFoods = List.from(meal.foods);
                 _updateNutritionCache();
@@ -195,15 +194,12 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     try {
       await _mealRepository.updateMeal(widget.meal.id, name, time);
 
-      // Salvar também a lista de alimentos atualizada APENAS se houver mudanças
       if (_hasUnsavedChanges) {
-        // Primeiro, remove todos os alimentos existentes no Firebase
         final currentMeal = _currentMeal ?? widget.meal;
         for (var food in currentMeal.foods) {
           await _mealRepository.removeFoodFromMeal(widget.meal.id, food.foodId);
         }
 
-        // Depois, adiciona os alimentos da lista local
         for (var food in _localFoods) {
           await _mealRepository.addFoodToMeal(widget.meal.id, food);
         }
@@ -303,7 +299,6 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     }
   }
 
-  // Atualiza o cache dos valores nutricionais
   void _updateNutritionCache() {
     _cachedCalories = _localFoods.fold(
       0,
@@ -324,29 +319,45 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   double get _totalFats => _cachedFats;
 
   Future<void> _searchFoods(String query) async {
-    // Cancela o timer anterior se existir
     _debounceTimer?.cancel();
 
-    if (query.isEmpty) {
+    if (query.trim().isEmpty) {
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _isLoading = false;
       });
       return;
     }
 
     setState(() {
       _isSearching = true;
+      _isLoading = true; // Mostra loading
     });
 
-    // Cria um novo timer de 300ms
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-      final results = await _foodRepository.searchFoods(query);
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final results = await _foodRepository.searchFoods(query);
 
-      if (mounted) {
-        setState(() {
-          _searchResults = results;
-        });
+        if (mounted) {
+          setState(() {
+            _searchResults = results;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao buscar: $e'),
+              backgroundColor: Colors.red[700],
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     });
   }
@@ -358,20 +369,20 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     final mealFood = MealFood(
       foodId: food.id,
       name: food.name,
-      quantity: 100, // quantidade padrão: 100g
+      quantity: food.servingSizeGrams ?? 100, // Porção sugerida ou 100g
       caloriesPer100g: food.caloriesPer100g,
       carbsPer100g: food.carbsPer100g,
       proteinsPer100g: food.proteinsPer100g,
       fatsPer100g: food.fatsPer100g,
+      isLiquid: food.isLiquid,
     );
 
-    // Adiciona apenas na lista local, não salva no Firebase ainda
     setState(() {
       _localFoods.add(mealFood);
-      _updateNutritionCache(); // Atualiza o cache
+      _updateNutritionCache();
     });
 
-    _markAsChanged(); // Marca como alterado
+    _markAsChanged();
 
     // Limpar pesquisa após adicionar
     _searchController.clear();
@@ -435,9 +446,9 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Quantidade (gramas)',
+                  labelText: 'Quantidade (${food.isLiquid ? 'ml' : 'gramas'})',
                   hintText: '100',
-                  suffixText: 'g',
+                  suffixText: food.unit,
                   suffixStyle: TextStyle(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -830,6 +841,29 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
   }
 
   Widget _buildSearchResults() {
+    // Mostrar loading spinner enquanto carrega
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B7B5E)),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Buscando alimentos...',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_searchResults.isEmpty) {
       return Center(
         child: Column(
@@ -1019,7 +1053,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           border: Border.all(color: Colors.grey[300]!),
                         ),
                         child: Text(
-                          '${food.quantity.toStringAsFixed(0)}g',
+                          '${food.quantity.toStringAsFixed(0)}${food.unit}',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
