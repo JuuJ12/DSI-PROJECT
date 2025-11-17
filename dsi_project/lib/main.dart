@@ -8,16 +8,11 @@ import 'package:dsi_project/core/config/supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializa Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Inicializa Supabase
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
-
   appRouter = createRouter();
 
   runApp(const MyApp());

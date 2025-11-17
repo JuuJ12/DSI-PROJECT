@@ -5,8 +5,6 @@ import 'package:dsi_project/features/chatbot/tela_chat_bot.dart';
 import 'package:dsi_project/features/crud_atv_fisica/list_atividades_screen.dart';
 import 'package:dsi_project/features/home/home_screen.dart';
 import 'package:dsi_project/features/mapa_diabetes/map_screen.dart';
-import 'package:dsi_project/features/Agendamento.dart';
-import 'package:dsi_project/features/Recomendacoes.dart';
 import 'package:go_router/go_router.dart';
 
 late GoRouter appRouter;

@@ -102,30 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             icon: Icons.notifications_outlined,
                             onPressed: () => _showComingSoon(context),
                           ),
-                          Positioned(
-                            right: 0,
-                            top: -1,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 18,
-                                minHeight: 18,
-                              ),
-                              child: const Text(
-                                '3',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(width: 8),
