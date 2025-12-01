@@ -192,8 +192,9 @@ class OpenFoodFactsService {
 
       if (name.toLowerCase().contains('lata')) return 350.0;
       if (name.toLowerCase().contains('garrafa') &&
-          name.toLowerCase().contains('pet'))
+          name.toLowerCase().contains('pet')) {
         return 600.0;
+      }
 
       return null;
     } catch (e) {
