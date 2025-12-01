@@ -197,10 +197,10 @@ packages:
     dependency: transitive
     description:
       name: file
-      sha256: a3b4f84adafef897088c160faf7dfffb7696046cb13ae90b508c2cbc95d3b8d4
+      sha256: "1b92bec4fc2a72f59a8e15af5f52cd441e4a7860b49499d69dfa817af20e925d"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.1"
+    version: "6.1.4"
   file_selector_linux:
     dependency: transitive
     description:
@@ -310,6 +310,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+  flutter_local_notifications:
+    dependency: "direct main"
+    description:
+      name: flutter_local_notifications
+      sha256: "674173fd3c9eda9d4c8528da2ce0ea69f161577495a9cc835a2a4ecd7eadeb35"
+      url: "https://pub.dev"
+    source: hosted
+    version: "17.2.4"
+  flutter_local_notifications_linux:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_linux
+      sha256: c49bd06165cad9beeb79090b18cd1eb0296f4bf4b23b84426e37dd7c027fc3af
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.1"
+  flutter_local_notifications_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_platform_interface
+      sha256: "85f8d07fe708c1bdcf45037f2c0109753b26ae077e9d9e899d55971711a4ea66"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
@@ -433,10 +457,10 @@ packages:
     dependency: transitive
     description:
       name: gsettings
-      sha256: "1b0ce661f5436d2db1e51f3c4295a49849f03d304003a7ba177d01e3a858249c"
+      sha256: fe90d719e09a6f36607021047e642068a0c98839d9633db00b91633420ae8b0d
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.8"
+    version: "0.2.7"
   gtk:
     dependency: transitive
     description:
@@ -633,10 +657,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
+      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
       url: "https://pub.dev"
     source: hosted
-    version: "1.16.0"
+    version: "1.17.0"
   mgrs_dart:
     dependency: transitive
     description:
@@ -813,6 +837,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.0"
+  process:
+    dependency: transitive
+    description:
+      name: process
+      sha256: "53fd8db9cec1d37b0574e12f07520d582019cb6c44abf5479a01505099a34a09"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.4"
   proj4dart:
     dependency: transitive
     description:
@@ -974,10 +1006,18 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00"
+      sha256: ab2726c1a94d3176a45960b6234466ec367179b87dd74f1611adb1f3b5fb9d55
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.6"
+    version: "0.7.7"
+  timezone:
+    dependency: "direct main"
+    description:
+      name: timezone
+      sha256: "2236ec079a174ce07434e89fcd3fcda430025eb7692244139a9cf54fdcf1fc7d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.4"
   typed_data:
     dependency: transitive
     description:
@@ -1126,10 +1166,10 @@ packages:
     dependency: transitive
     description:
       name: xdg_directories
-      sha256: "7a3f37b05d989967cdddcbb571f1ea834867ae2faa29725fd085180e0883aa15"
+      sha256: bd512f03919aac5f1313eb8249f223bacf4927031bf60b02601f81f687689e86
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "0.2.0+3"
   xml:
     dependency: transitive
     description:
