@@ -93,8 +93,9 @@ class _MapScreenState extends State<MapScreen> {
         if (lat == null || lon == null) continue;
         final p = LatLng(lat, lon);
         final meters = distance.distance(center, p);
-        if (meters <= _searchRadiusMeters)
+        if (meters <= _searchRadiusMeters) {
           results.add(_Place(name: display, latLng: p, tipo: tipo));
+        }
       } catch (_) {
         // ignore malformed entries
       }
@@ -140,11 +141,12 @@ class _MapScreenState extends State<MapScreen> {
 
   // Aggregate results for all selected filters, deduplicate by coordinates.
   Future<void> _applyFilters() async {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _loading = true;
         _places = [];
       });
+    }
 
     try {
       final center = _userPosition ?? kRecifeCenter;
@@ -707,8 +709,8 @@ class _MapScreenState extends State<MapScreen> {
                 onPressed: () async {
                   await _showAndCenterUserLocation();
                 },
-                child: const Icon(Icons.my_location, color: Colors.white),
                 tooltip: 'Centralizar',
+                child: const Icon(Icons.my_location, color: Colors.white),
               ),
             ),
           ),
@@ -731,3 +733,4 @@ class _CacheEntry {
   final DateTime fetchedAt;
   _CacheEntry({required this.places, required this.fetchedAt});
 }
+  
