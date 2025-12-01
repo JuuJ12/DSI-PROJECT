@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dsi_project/domain/models/medicamento_model.dart';
+import 'package:dsi_project/domain/models/dose_model.dart';
 
 class MedicamentoRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -65,6 +66,39 @@ class MedicamentoRepository {
   Future<void> deleteMedicamento(String id) async {
     try {
       await _medicamentosCollection.doc(id).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Registrar uma dose tomada (subcollection 'doses' dentro do documento do medicamento)
+  Future<String> addDose(String medicamentoId, DoseModel dose) async {
+    try {
+      final dosesCol = _medicamentosCollection.doc(medicamentoId).collection('doses');
+      final docRef = await dosesCol.add(dose.toMap());
+      return docRef.id;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Recuperar histórico de doses para um medicamento
+  Stream<List<DoseModel>> getDosesForMedicamento(String medicamentoId) {
+    try {
+      final dosesCol = _medicamentosCollection.doc(medicamentoId).collection('doses');
+      return dosesCol.orderBy('takenAt', descending: true).snapshots().map((snap) {
+        return snap.docs.map((d) => DoseModel.fromFirestore(d)).toList();
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Deletar dose
+  Future<void> deleteDose(String medicamentoId, String doseId) async {
+    try {
+      final dosesCol = _medicamentosCollection.doc(medicamentoId).collection('doses');
+      await dosesCol.doc(doseId).delete();
     } catch (e) {
       rethrow;
     }
