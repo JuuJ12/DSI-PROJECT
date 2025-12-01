@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:dsi_project/domain/models/medicamento_model.dart';
 import 'package:dsi_project/data/repositories/medicamento_repository.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
+import 'package:dsi_project/core/notifications/notification_service.dart';
 
 class AddEditMedicamentoScreen extends StatefulWidget {
   final MedicamentoModel? medicamento;
@@ -22,6 +23,8 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
   late TextEditingController _nomeController;
   late TextEditingController _intervaloController;
   late TextEditingController _observacoesController;
+  late TextEditingController _dosagemController;
+  String? _selectedUnidade;
 
   DateTime? _dataInicio;
   DateTime? _dataFim;
@@ -39,6 +42,10 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
     _observacoesController = TextEditingController(
       text: widget.medicamento?.observacoes ?? '',
     );
+    _dosagemController = TextEditingController(
+      text: widget.medicamento?.dosagem?.toString() ?? '',
+    );
+    _selectedUnidade = widget.medicamento?.unidade;
     _dataInicio = widget.medicamento?.dataInicio;
     _dataFim = widget.medicamento?.dataFim;
   }
@@ -48,6 +55,7 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
     _nomeController.dispose();
     _intervaloController.dispose();
     _observacoesController.dispose();
+    _dosagemController.dispose();
     super.dispose();
   }
 
@@ -455,6 +463,76 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
               ),
             ),
 
+            const SizedBox(height: 16),
+
+            // Dosagem e unidade
+            _buildSectionTitle('Dosagem (Opcional)'),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _dosagemController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\.,]'))],
+                    decoration: InputDecoration(
+                      hintText: 'Ex: 500',
+                      prefixIcon: const Icon(
+                        Icons.scale,
+                        color: Color(0xFF6B7B5E),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      final normalized = value.replaceAll(',', '.');
+                      final val = double.tryParse(normalized);
+                      if (val == null || val <= 0) {
+                        return 'Informe uma dosagem válida';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedUnidade,
+                        hint: const Text('Unidade'),
+                        items: const [
+                          DropdownMenuItem(value: 'mg', child: Text('mg')),
+                          DropdownMenuItem(value: 'UI', child: Text('UI')),
+                          DropdownMenuItem(value: 'ml', child: Text('ml')),
+                          DropdownMenuItem(value: 'comprimido', child: Text('comprimido')),
+                        ],
+                        onChanged: (v) {
+                          setState(() {
+                            _selectedUnidade = v;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 32),
 
             // Informações úteis
@@ -714,6 +792,10 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
         observacoes: _observacoesController.text.trim().isEmpty
             ? null
             : _observacoesController.text.trim(),
+        dosagem: _dosagemController.text.trim().isEmpty
+            ? null
+            : double.tryParse(_dosagemController.text.replaceAll(',', '.').trim()),
+        unidade: _selectedUnidade,
         createdAt: widget.medicamento?.createdAt ?? DateTime.now(),
       );
 
@@ -722,8 +804,67 @@ class _AddEditMedicamentoScreenState extends State<AddEditMedicamentoScreen> {
           widget.medicamento!.id!,
           medicamento,
         );
+        // Agendar notificações atualizadas (tenta cancelar as antigas primeiro)
+        try {
+          final baseId = (widget.medicamento!.id!.hashCode).abs() % 100000;
+          final notifService = NotificationService();
+
+          // cancelar um range razoável de notificações antigas
+          for (int i = 0; i < 24; i++) {
+            await notifService.cancelNotification(baseId + i);
+          }
+
+          // reagendar com o mesmo base
+          DateTime firstDose = DateTime(
+            medicamento.dataInicio.year,
+            medicamento.dataInicio.month,
+            medicamento.dataInicio.day,
+            8,
+            0,
+          );
+          DateTime candidate = firstDose;
+          int idx = 0;
+          while (!candidate.isAfter(medicamento.dataFim)) {
+            await notifService.scheduleNotification(
+              id: baseId + idx,
+              title: 'Hora do medicamento',
+              body: 'Tomar ${medicamento.nome}${medicamento.dosagem != null ? ' ${medicamento.dosagem}${medicamento.unidade ?? ''}' : ''}',
+              scheduledDate: candidate,
+            );
+            idx++;
+            candidate = candidate.add(Duration(hours: medicamento.intervaloHoras));
+            if (idx > 48) break; // segurança
+          }
+        } catch (_) {}
       } else {
-        await _medicamentoRepository.createMedicamento(medicamento);
+        final newId = await _medicamentoRepository.createMedicamento(medicamento);
+
+        // Agendar notificações locais para este medicamento
+        try {
+          final baseId = (newId.hashCode).abs() % 100000;
+          final notifService = NotificationService();
+
+          DateTime firstDose = DateTime(
+            medicamento.dataInicio.year,
+            medicamento.dataInicio.month,
+            medicamento.dataInicio.day,
+            8,
+            0,
+          );
+          DateTime candidate = firstDose;
+          int idx = 0;
+          while (!candidate.isAfter(medicamento.dataFim)) {
+            await notifService.scheduleNotification(
+              id: baseId + idx,
+              title: 'Hora do medicamento',
+              body: 'Tomar ${medicamento.nome}${medicamento.dosagem != null ? ' ${medicamento.dosagem}${medicamento.unidade ?? ''}' : ''}',
+              scheduledDate: candidate,
+            );
+            idx++;
+            candidate = candidate.add(Duration(hours: medicamento.intervaloHoras));
+            if (idx > 48) break; // segurança
+          }
+        } catch (_) {}
       }
 
       if (mounted) {
