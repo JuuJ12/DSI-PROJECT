@@ -43,7 +43,10 @@ dependencies:
   shared_preferences: ^2.1.1
   fl_chart: ^1.1.1
   flutter_map: ^8.2.0
+  flutter_local_notifications: ^12.0.4
+  flutter_local_notifications_linux: ^4.0.0
   latlong2: ^0.9.0
+  timezone: ^0.9.0
   # Location helpers
   geolocator: ^14.0.2
   permission_handler: ^12.0.0
