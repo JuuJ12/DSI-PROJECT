@@ -3,6 +3,7 @@ import 'package:dsi_project/domain/models/medicamento_model.dart';
 import 'package:dsi_project/data/repositories/medicamento_repository.dart';
 import 'package:dsi_project/data/repositories/auth_repository.dart';
 import 'package:dsi_project/features/medicamentos/add_edit_medicamento_screen.dart';
+import 'package:dsi_project/domain/models/dose_model.dart';
 
 class ListMedicamentosScreen extends StatefulWidget {
   const ListMedicamentosScreen({super.key});
@@ -379,7 +380,10 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'A cada ${medicamento.intervaloHoras}h',
+                            'A cada ${medicamento.intervaloHoras}h' +
+                                (medicamento.dosagem != null
+                                    ? ' • ${medicamento.dosagem}${medicamento.unidade != null ? ' ${medicamento.unidade}' : ''}'
+                                    : ''),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[600],
@@ -410,10 +414,85 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    if (isAtivo)
+                      IconButton(
+                        icon: const Icon(Icons.check_circle_outline, color: Color(0xFF6B7B5E)),
+                        tooltip: 'Marcar dose como tomada',
+                        onPressed: () async {
+                          try {
+                            final dose = DoseModel(
+                              medicamentoId: medicamento.id!,
+                              takenAt: DateTime.now(),
+                            );
+                            await _medicamentoRepository.addDose(medicamento.id!, dose);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Dose registrada')),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Erro ao registrar dose: $e')),
+                              );
+                            }
+                          }
+                        },
+                      ),
                   ],
                 ),
 
                 const SizedBox(height: 16),
+                // Próxima dose / contagem
+                Builder(builder: (context) {
+                  final next = medicamento.nextDose();
+                  if (next == null) return const SizedBox.shrink();
+                  final diff = next.difference(DateTime.now());
+                  final hours = diff.inHours;
+                  final minutes = diff.inMinutes.remainder(60);
+                  final inText = diff.isNegative
+                      ? 'agora'
+                      : '${hours > 0 ? '${hours}h ' : ''}${minutes}m';
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6B7B5E).withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFF6B7B5E).withOpacity(0.18),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6B7B5E).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.access_time, color: Color(0xFF6B7B5E), size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Próxima dose: ${next.hour.toString().padLeft(2,'0')}:${next.minute.toString().padLeft(2,'0')}',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+                              ),
+                              const SizedBox(height: 2),
+                              Text('Em $inText', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
 
                 // Dias restantes em destaque (se ativo)
                 if (isAtivo && diasRestantes > 0) ...[
