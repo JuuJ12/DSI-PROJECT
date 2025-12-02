@@ -380,10 +380,9 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'A cada ${medicamento.intervaloHoras}h' +
-                                (medicamento.dosagem != null
+                            'A cada ${medicamento.intervaloHoras}h${medicamento.dosagem != null
                                     ? ' • ${medicamento.dosagem}${medicamento.unidade != null ? ' ${medicamento.unidade}' : ''}'
-                                    : ''),
+                                    : ''}',
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[600],
@@ -574,60 +573,59 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
                 ),
 
                 // NOVO: Histórico de Doses
-                const SizedBox(height: 12),
-                StreamBuilder<List<DoseModel>>(
-                  // Busca as doses para este medicamento específico
-                  stream: _medicamentoRepository.getDosesByMedicamentoId(medicamento.id!),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return _buildInfoRow(
-                        Icons.history_toggle_off,
-                        'Nenhuma dose registrada ainda',
-                        color: Colors.grey[500],
-                      );
-                    }
+                // const SizedBox(height: 12),
+                // StreamBuilder<List<DoseModel>>(
+                //   stream: _medicamentoRepository.getDosesStream(medicamento.id!),
+                //   builder: (context, snapshot) {
+                //     if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                //       return _buildInfoRow(
+                //         Icons.history_toggle_off,
+                //         'Nenhuma dose registrada ainda',
+                //         color: Colors.grey[500],
+                //       );
+                //     }
 
-                    final doses = snapshot.data!;
-                    // Pega a dose mais recente
-                    final ultimaDose = doses.first;
+                //     final doses = snapshot.data!;
+                //     // Pega a dose mais recente
+                //     final ultimaDose = doses.first;
 
-                    return ExpansionTile(
-                      tilePadding: EdgeInsets.zero,
-                      title: _buildInfoRow(
-                        Icons.history,
-                        'Última dose: ${_formatDateTime(ultimaDose.takenAt)}',
-                        color: Colors.grey[800],
-                      ),
-                      subtitle: Text(
-                        'Toque para ver o histórico completo (${doses.length} doses)',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      children: [
-                        const Divider(),
-                        SizedBox(
-                          height: 100, // Limita a altura do histórico
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: doses.length > 5 ? 5 : doses.length, // Mostra até 5 doses
-                            itemBuilder: (context, index) {
-                              final dose = doses[index];
-                              return ListTile(
-                                dense: true,
-                                leading: Icon(Icons.check_circle, color: const Color(0xFF6B7B5E), size: 18),
-                                title: Text(
-                                  _formatDateTime(dose.takenAt),
-                                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                                ),
-                                trailing: Text('${index + 1}ª dose'),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
+                //     return ExpansionTile(
+                //       tilePadding: EdgeInsets.zero,
+                //       title: _buildInfoRow(
+                //         Icons.history,
+                //         'Última dose: ${_formatDateTime(ultimaDose.takenAt)}',
+                //         color: Colors.grey[800],
+                //       ),
+                //       subtitle: Text(
+                //         'Toque para ver o histórico completo (${doses.length} doses)',
+                //         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                //       ),
+                //       children: [
+                //         const Divider(),
+                //         SizedBox(
+                //           height: 100, // Limita a altura do histórico
+                //           child: ListView.builder(
+                //             shrinkWrap: true,
+                //             itemCount: doses.length > 5 ? 5 : doses.length, // Mostra até 5 doses
+                //             itemBuilder: (context, index) {
+                //               final dose = doses[index];
+                //               return ListTile(
+                //                 dense: true,
+                //                 leading: Icon(Icons.check_circle, color: const Color(0xFF6B7B5E), size: 18),
+                //                 title: Text(
+                //                   _formatDateTime(dose.takenAt),
+                //                   style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                //                 ),
+                //                 trailing: Text('${index + 1}ª dose'),
+                //               );
+                //             },
+                //           ),
+                //         ),
+                //       ],
+                //     );
+                //   },
+                // ),
+                // const SizedBox(height: 12),
 
                 if (medicamento.observacoes != null &&
                     medicamento.observacoes!.isNotEmpty) ...[
