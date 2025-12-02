@@ -445,54 +445,54 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
 
                 const SizedBox(height: 16),
                 // Próxima dose / contagem
-                Builder(builder: (context) {
-                  final next = medicamento.nextDose();
-                  if (next == null) return const SizedBox.shrink();
-                  final diff = next.difference(DateTime.now());
-                  final hours = diff.inHours;
-                  final minutes = diff.inMinutes.remainder(60);
-                  final inText = diff.isNegative
-                      ? 'agora'
-                      : '${hours > 0 ? '${hours}h ' : ''}${minutes}m';
+                // Builder(builder: (context) {
+                //   final next = medicamento.nextDose();
+                //   if (next == null) return const SizedBox.shrink();
+                //   final diff = next.difference(DateTime.now());
+                //   final hours = diff.inHours;
+                //   final minutes = diff.inMinutes.remainder(60);
+                //   final inText = diff.isNegative
+                //       ? 'agora'
+                //       : '${hours > 0 ? '${hours}h ' : ''}${minutes}m';
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6B7B5E).withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF6B7B5E).withOpacity(0.18),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6B7B5E).withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.access_time, color: Color(0xFF6B7B5E), size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Próxima dose: ${next.hour.toString().padLeft(2,'0')}:${next.minute.toString().padLeft(2,'0')}',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-                              ),
-                              const SizedBox(height: 2),
-                              Text('Em $inText', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                //   return Container(
+                //     margin: const EdgeInsets.only(bottom: 12),
+                //     padding: const EdgeInsets.all(12),
+                //     decoration: BoxDecoration(
+                //       color: const Color(0xFF6B7B5E).withOpacity(0.06),
+                //       borderRadius: BorderRadius.circular(10),
+                //       border: Border.all(
+                //         color: const Color(0xFF6B7B5E).withOpacity(0.18),
+                //       ),
+                //     ),
+                //     child: Row(
+                //       children: [
+                //         Container(
+                //           padding: const EdgeInsets.all(8),
+                //           decoration: BoxDecoration(
+                //             color: const Color(0xFF6B7B5E).withOpacity(0.12),
+                //             shape: BoxShape.circle,
+                //           ),
+                //           child: const Icon(Icons.access_time, color: Color(0xFF6B7B5E), size: 18),
+                //         ),
+                //         const SizedBox(width: 12),
+                //         Expanded(
+                //           child: Column(
+                //             crossAxisAlignment: CrossAxisAlignment.start,
+                //             children: [
+                //               Text(
+                //                 'Próxima dose: ${next.hour.toString().padLeft(2,'0')}:${next.minute.toString().padLeft(2,'0')}',
+                //                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+                //               ),
+                //               const SizedBox(height: 2),
+                //               Text('Em $inText', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                //             ],
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   );
+                // }),
 
                 // Dias restantes em destaque (se ativo)
                 if (isAtivo && diasRestantes > 0) ...[
@@ -573,6 +573,62 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
                   ],
                 ),
 
+                // NOVO: Histórico de Doses
+                const SizedBox(height: 12),
+                StreamBuilder<List<DoseModel>>(
+                  // Busca as doses para este medicamento específico
+                  stream: _medicamentoRepository.getDosesByMedicamentoId(medicamento.id!),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return _buildInfoRow(
+                        Icons.history_toggle_off,
+                        'Nenhuma dose registrada ainda',
+                        color: Colors.grey[500],
+                      );
+                    }
+
+                    final doses = snapshot.data!;
+                    // Pega a dose mais recente
+                    final ultimaDose = doses.first;
+
+                    return ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: _buildInfoRow(
+                        Icons.history,
+                        'Última dose: ${_formatDateTime(ultimaDose.takenAt)}',
+                        color: Colors.grey[800],
+                      ),
+                      subtitle: Text(
+                        'Toque para ver o histórico completo (${doses.length} doses)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                      children: [
+                        const Divider(),
+                        SizedBox(
+                          height: 100, // Limita a altura do histórico
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: doses.length > 5 ? 5 : doses.length, // Mostra até 5 doses
+                            itemBuilder: (context, index) {
+                              final dose = doses[index];
+                              return ListTile(
+                                dense: true,
+                                leading: Icon(Icons.check_circle, color: const Color(0xFF6B7B5E), size: 18),
+                                title: Text(
+                                  _formatDateTime(dose.takenAt),
+                                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                ),
+                                trailing: Text('${index + 1}ª dose'),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+
                 if (medicamento.observacoes != null &&
                     medicamento.observacoes!.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -614,21 +670,6 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color ?? Colors.grey[600]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 14, color: color ?? Colors.grey[700]),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -657,6 +698,28 @@ class _ListMedicamentosScreenState extends State<ListMedicamentosScreen> {
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
+
+  // NOVO: Método para formatar data e hora
+  String _formatDateTime(DateTime date) {
+    return '${_formatDate(date)} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  // NOVO: Widget de linha de informação (movido para o corpo da classe para ser reutilizado)
+  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color ?? Colors.grey[600]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 14, color: color ?? Colors.grey[700]),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   void _navigateToAddMedicamento(BuildContext context) {
     Navigator.push(
